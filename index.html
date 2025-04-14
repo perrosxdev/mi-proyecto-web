@@ -14,24 +14,67 @@
       align-items: center;
       overflow: hidden;
       font-family: 'Segoe UI', sans-serif;
+      animation: moverFondo 5s ease-in-out infinite alternate;
     }
+
+    /* Animación para el fondo */
+    @keyframes moverFondo {
+      0% {
+        background-position: 0% 0%;
+      }
+      100% {
+        background-position: 100% 100%;
+      }
+    }
+
     .mensaje {
       font-size: 3rem;
       color: white;
       display: flex;
       flex-wrap: wrap;
       gap: 0.1em;
+      text-align: center;
     }
+
     .letra {
       opacity: 0;
       transform: translateY(-100px);
-      animation: caer 0.6s ease-out forwards;
+      animation: caer 0.6s ease-out forwards, rebote 0.4s ease-out 0.6s forwards;
       white-space: pre;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4); /* Sombra en las letras */
     }
+
+    /* Animación de caída */
     @keyframes caer {
       to {
         transform: translateY(0);
         opacity: 1;
+      }
+    }
+
+    /* Animación de rebote después de caer */
+    @keyframes rebote {
+      0% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    /* Efecto de cambio de color de las letras */
+    @keyframes color {
+      0% {
+        color: #ffffff;
+      }
+      50% {
+        color: #ff6347; /* Color anaranjado */
+      }
+      100% {
+        color: #ffffff;
       }
     }
   </style>
@@ -48,6 +91,8 @@
       span.innerHTML = letra === " " ? "&nbsp;" : letra;
       span.classList.add("letra");
       span.style.animationDelay = `${i * 0.05}s`;
+      span.style.animationName = `caer, rebote, color`;  // Usamos las 3 animaciones
+      span.style.animationDuration = `0.6s, 0.4s, 1.2s`; // Duración de las animaciones
       contenedor.appendChild(span);
     });
   </script>
