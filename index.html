@@ -1,9 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Mi primera web</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bienvenido</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .mensaje {
+      font-size: 3rem;
+      color: white;
+      display: flex;
+    }
+    .letra {
+      opacity: 0;
+      transform: translateY(-100px);
+      animation: caer 0.6s ease-out forwards;
+    }
+    @keyframes caer {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>¡Hola, GitHub Pages!</h1>
+  <div class="mensaje" id="mensaje"></div>
+
+  <script>
+    const texto = "¡Bienvenido a mi proyecto!";
+    const contenedor = document.getElementById("mensaje");
+
+    texto.split("").forEach((letra, i) => {
+      const span = document.createElement("span");
+      span.textContent = letra;
+      span.classList.add("letra");
+      span.style.animationDelay = `${i * 0.05}s`;
+      contenedor.appendChild(span);
+    });
+  </script>
 </body>
 </html>
