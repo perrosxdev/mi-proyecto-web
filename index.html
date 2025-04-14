@@ -19,11 +19,14 @@
       font-size: 3rem;
       color: white;
       display: flex;
+      flex-wrap: wrap;
+      gap: 0.1em;
     }
     .letra {
       opacity: 0;
       transform: translateY(-100px);
       animation: caer 0.6s ease-out forwards;
+      white-space: pre;
     }
     @keyframes caer {
       to {
@@ -42,7 +45,7 @@
 
     texto.split("").forEach((letra, i) => {
       const span = document.createElement("span");
-      span.textContent = letra;
+      span.innerHTML = letra === " " ? "&nbsp;" : letra;
       span.classList.add("letra");
       span.style.animationDelay = `${i * 0.05}s`;
       contenedor.appendChild(span);
