@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // Importa useRouter
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css"; // Estilos de react-datepicker
+import Modal from "../components/Modal"; // Importa el componente Modal
 
 export default function Vacaciones() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [minDate, setMinDate] = useState<Date | undefined>();
+  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
+  const router = useRouter(); // Hook para redirigir
 
   // Calcula la fecha mínima (15 días después de hoy)
   useEffect(() => {
@@ -16,13 +20,23 @@ export default function Vacaciones() {
     setMinDate(minDateValue);
   }, []);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsModalOpen(true); // Abre el modal al confirmar
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false); // Cierra el modal
+    router.push("/home"); // Redirige al home
+  };
+
   return (
     <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4 sm:p-8">
       <main className="bg-gray-100 rounded-lg shadow-md p-6 w-full max-w-md mt-8">
         <h2 className="text-xl font-bold text-center mb-6 text-blue-900">
           Solicitud de Vacaciones
         </h2>
-        <form className="flex flex-col gap-4">
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           {/* Fecha */}
           <div>
             <label htmlFor="fecha" className="block text-sm font-medium mb-1">
@@ -60,6 +74,15 @@ export default function Vacaciones() {
           </button>
         </form>
       </main>
+
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal} // Llama a handleCloseModal al cerrar
+        title="Solicitud Enviada"
+      >
+        <p>Tu solicitud de vacaciones se ha enviado correctamente.</p>
+      </Modal>
     </div>
   );
 }
