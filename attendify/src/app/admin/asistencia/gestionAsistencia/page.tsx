@@ -31,7 +31,7 @@ export default function GestionAsistencia() {
               attendance: [...employee.attendance, newRecord],
             }
           : employee
-      )
+      ) as Employee[]
     );
 
     setNewRecord({ date: "", time: "", type: "entrada" });
