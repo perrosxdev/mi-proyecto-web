@@ -1,19 +1,45 @@
 "use client";
 
 import { useState } from "react";
+import { useWorkHours } from "@/app/context/WorkHoursContext";
+
+interface Role {
+  name: string;
+  permissions: string[];
+}
 
 export default function Configuracion() {
-  const [workHours, setWorkHours] = useState({ start: "09:00", end: "18:00" }); // Horarios laborales
-  const [tolerance, setTolerance] = useState(10); // Tolerancia en minutos
-  const [roles, setRoles] = useState([
-    { id: 1, name: "Administrador", permissions: ["Gestionar empleados", "Ver reportes"] },
-    { id: 2, name: "Empleado", permissions: ["Registrar asistencia"] },
-  ]); // Roles y permisos
+  const { intervals, tolerance, setIntervals, setTolerance } = useWorkHours();
+  const [newInterval, setNewInterval] = useState({ start: "", end: "" }); // Nuevo intervalo
+  const [roles, setRoles] = useState<Role[]>([
+    { name: "Administrador", 
+      permissions: [
+        "Gestionar empleados",
+        "Gestionar asistencia",
+        "Gestionar horarios laborales",
+        "Gestionar roles y permisos",
+        "Ver reportes",
+      ], },
+    { name: "Empleado", permissions: ["Registrar asistencia", "Solicitar Vacaciones"] },
+  ]); // Roles iniciales
   const [newRole, setNewRole] = useState({ name: "", permissions: "" }); // Nuevo rol
 
   // Guardar cambios en los horarios laborales
   const handleSaveWorkHours = () => {
-    alert(`Horarios laborales actualizados: ${workHours.start} - ${workHours.end}`);
+    if (!newInterval.start || !newInterval.end) {
+      alert("Por favor, completa ambos campos para agregar un intervalo.");
+      return;
+    }
+
+    setIntervals([...intervals, newInterval]); // Agregar el nuevo intervalo
+    setNewInterval({ start: "", end: "" }); // Limpiar los campos
+    alert("Horarios laborales actualizados.");
+  };
+
+  // Eliminar un intervalo
+  const handleDeleteInterval = (index: number) => {
+    const updatedIntervals = intervals.filter((_, i) => i !== index);
+    setIntervals(updatedIntervals);
   };
 
   // Guardar cambios en la tolerancia
@@ -30,10 +56,16 @@ export default function Configuracion() {
 
     setRoles([
       ...roles,
-      { id: roles.length + 1, name: newRole.name, permissions: newRole.permissions.split(",") },
+      { name: newRole.name, permissions: newRole.permissions.split(",") },
     ]);
     setNewRole({ name: "", permissions: "" });
     alert("Nuevo rol agregado correctamente.");
+  };
+
+  // Eliminar un rol
+  const handleDeleteRole = (index: number) => {
+    const updatedRoles = roles.filter((_, i) => i !== index);
+    setRoles(updatedRoles);
   };
 
   return (
@@ -56,36 +88,56 @@ export default function Configuracion() {
         <div className="mb-6">
           <h2 className="text-lg font-bold mb-4">Horarios Laborales</h2>
           <div className="flex flex-col gap-4">
-            <div>
-              <label htmlFor="start" className="block text-sm font-medium mb-1">
-                Hora de inicio:
-              </label>
-              <input
-                id="start"
-                type="time"
-                className="w-full border rounded px-3 py-2"
-                value={workHours.start}
-                onChange={(e) => setWorkHours({ ...workHours, start: e.target.value })}
-              />
-            </div>
-            <div>
-              <label htmlFor="end" className="block text-sm font-medium mb-1">
-                Hora de fin:
-              </label>
-              <input
-                id="end"
-                type="time"
-                className="w-full border rounded px-3 py-2"
-                value={workHours.end}
-                onChange={(e) => setWorkHours({ ...workHours, end: e.target.value })}
-              />
+            {/* Lista de intervalos */}
+            <ul className="list-disc pl-6">
+              {intervals.map((interval, index) => (
+                <li key={index} className="flex justify-between items-center">
+                  <span>
+                    {interval.start} - {interval.end}
+                  </span>
+                  <button
+                    className="text-red-500 hover:underline text-sm"
+                    onClick={() => handleDeleteInterval(index)}
+                  >
+                    Eliminar
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {/* Agregar nuevo intervalo */}
+            <div className="flex gap-4">
+              <div>
+                <label htmlFor="start" className="block text-sm font-medium mb-1">
+                  Hora de inicio:
+                </label>
+                <input
+                  id="start"
+                  type="time"
+                  className="w-full border rounded px-3 py-2"
+                  value={newInterval.start}
+                  onChange={(e) => setNewInterval({ ...newInterval, start: e.target.value })}
+                />
+              </div>
+              <div>
+                <label htmlFor="end" className="block text-sm font-medium mb-1">
+                  Hora de fin:
+                </label>
+                <input
+                  id="end"
+                  type="time"
+                  className="w-full border rounded px-3 py-2"
+                  value={newInterval.end}
+                  onChange={(e) => setNewInterval({ ...newInterval, end: e.target.value })}
+                />
+              </div>
             </div>
             <button
               onClick={handleSaveWorkHours}
               className="px-4 py-2 rounded"
               style={{
-                backgroundColor: "var(--accent)",
-                color: "var(--accent-foreground)",
+                backgroundColor: "#1C398E",
+                color: "#FFFFFF",
               }}
             >
               Guardar Horarios
@@ -113,8 +165,8 @@ export default function Configuracion() {
               onClick={handleSaveTolerance}
               className="px-4 py-2 rounded"
               style={{
-                backgroundColor: "var(--accent)",
-                color: "var(--accent-foreground)",
+                backgroundColor: "#1C398E",
+                color: "#FFFFFF",
               }}
             >
               Guardar Tolerancia
@@ -126,25 +178,24 @@ export default function Configuracion() {
         <div className="mb-6">
           <h2 className="text-lg font-bold mb-4">Roles y Permisos</h2>
           <div className="flex flex-col gap-4">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="border border-gray-300 px-4 py-2 text-left">Rol</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Permisos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {roles.map((role) => (
-                  <tr key={role.id} className="hover:bg-gray-100">
-                    <td className="border border-gray-300 px-4 py-2">{role.name}</td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {role.permissions.join(", ")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <h3 className="text-md font-bold mt-4">Agregar Nuevo Rol</h3>
+            {/* Lista de roles */}
+            <ul className="list-disc pl-6">
+              {roles.map((role, index) => (
+                <li key={index} className="flex justify-between items-center">
+                  <span>
+                    <strong>{role.name}:</strong> {role.permissions.join(", ")}
+                  </span>
+                  <button
+                    className="text-red-500 hover:underline text-sm"
+                    onClick={() => handleDeleteRole(index)}
+                  >
+                    Eliminar
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {/* Agregar nuevo rol */}
             <div>
               <label htmlFor="roleName" className="block text-sm font-medium mb-1">
                 Nombre del Rol:
@@ -173,8 +224,8 @@ export default function Configuracion() {
               onClick={handleAddRole}
               className="px-4 py-2 rounded"
               style={{
-                backgroundColor: "var(--accent)",
-                color: "var(--accent-foreground)",
+                backgroundColor: "#1C398E",
+                color: "#FFFFFF",
               }}
             >
               Agregar Rol

@@ -30,15 +30,36 @@ Pantalla de Administrador: Panel de Control
    - Roles y permisos:
      - Gestionar roles (administrador, empleado) y sus permisos.
 
-5. Notificaciones
-   - Alertas:
-     - Empleados con asistencia irregular.
-     - Empleados que no han registrado entrada/salida.
-   - Mensajes:
-     - Enviar notificaciones a empleados (por ejemplo, recordatorios de asistencia).
-
 Flujo de Navegación
    - Inicio: Resumen del Dashboard.
    - Empleados: Gestión de empleados.
    - Asistencia: Historial y gestión de registros.
    - Configuración: Ajustes del sistema.
+
+Pantallas para el Empleado
+
+1. Registro de Asistencia
+   - Descripción: Permitir al empleado registrar su entrada y salida.
+   - Contenido:
+     - Mostrar el nombre del usuario autenticado.
+     - Botones para registrar:
+       - Entrada: Registrar la hora de entrada.
+       - Salida: Registrar la hora de salida.
+     - Validaciones:
+       - Verificar que el usuario esté autenticado.
+       - Mostrar mensajes de confirmación al registrar la asistencia.
+
+2. Perfil del Empleado
+   - Descripción: Mostrar información personal del empleado.
+   - Contenido:
+     - Información personal:
+       - Nombre.
+       - Correo electrónico.
+       - Posición.
+       - Roles actuales.
+     - Historial de roles y permisos asignados.
+     - Botón para actualizar información personal (si está permitido).
+
+Flujo de Navegación
+- Inicio: Resumen del perfil del empleado.
+- Registro: Pantalla para registrar entrada y salida.

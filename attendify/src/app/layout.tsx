@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import { UserProvider } from "./context/UserContext";
 import { EmployeeProvider } from "./context/EmployeeContext";
+import { WorkHoursProvider } from "@/app/context/WorkHoursContext";
 import { useState } from "react";
 
 export default function RootLayout({
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen">
         <UserProvider>
           <EmployeeProvider>
+            <WorkHoursProvider>
             {/* Renderiza el Navbar solo si no estás en la ruta de login */}
             {pathname !== "/" && (
               <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
@@ -38,6 +40,7 @@ export default function RootLayout({
             >
               {children}
             </main>
+            </WorkHoursProvider>
           </EmployeeProvider>
         </UserProvider>
       </body>

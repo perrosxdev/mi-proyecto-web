@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Modal from "@/app/components/Modal";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { useEmployees } from "@/app/context/EmployeeContext";
 
 export default function AsistenciaEmpleados() {
-  const { employees, getAttendanceHistory } = useEmployees();
+  const { employees } = useEmployees();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [recordType, setRecordType] = useState<string>(""); // Filtro por tipo de registro
   const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
+
+  // Normalizar una fecha para ignorar la hora (establecerla a las 00:00:00)
+  const normalizeDate = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  };
 
   // Filtrar registros según los filtros seleccionados
   const filteredAttendanceHistory = employees.flatMap((employee) =>
@@ -24,12 +29,12 @@ export default function AsistenciaEmpleados() {
         }
 
         // Filtro por rango de fechas
-        const recordDate = new Date(record.date).getTime();
-        const start = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : null;
-        const end = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : null;
+        const recordDate = normalizeDate(new Date(record.date)).getTime();
+        const start = startDate ? normalizeDate(startDate).getTime() : null;
+        const end = endDate ? normalizeDate(endDate).getTime() : null;
 
-        if (start && recordDate < start) return false;
-        if (end && recordDate > end) return false;
+        if (start !== null && recordDate < start) return false;
+        if (end !== null && recordDate > end) return false; // Incluir el día final
 
         // Filtro por tipo de registro
         if (recordType && record.type !== recordType) {
@@ -43,28 +48,6 @@ export default function AsistenciaEmpleados() {
         employeeName: employee.name,
       }))
   );
-
-  // Simular la exportación de datos a CSV
-  const handleExport = () => {
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      ["Fecha,Hora,Tipo,Empleado"]
-        .concat(
-          filteredAttendanceHistory.map(
-            (record) =>
-              `${record.date},${record.time},${record.type},${record.employeeName}`
-          )
-        )
-        .join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "historial_asistencia.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   return (
     <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4 sm:p-8">
@@ -181,12 +164,6 @@ export default function AsistenciaEmpleados() {
                   ))}
                 </tbody>
               </table>
-              <button
-                onClick={handleExport}
-                className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500"
-              >
-                Exportar a CSV
-              </button>
             </>
           ) : (
             <p className="text-gray-600">No hay registros que coincidan con los filtros.</p>
