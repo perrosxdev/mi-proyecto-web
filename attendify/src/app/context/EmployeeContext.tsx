@@ -2,13 +2,13 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-interface AttendanceRecord {
+export interface AttendanceRecord {
   date: string; // Fecha del registro (YYYY-MM-DD)
   time: string; // Hora del registro (HH:mm)
   type: "entrada" | "salida"; // Tipo de registro
 }
 
-interface Employee {
+export interface Employee {
   id: number;
   name: string;
   position: string;
@@ -17,7 +17,7 @@ interface Employee {
 
 interface EmployeeContextType {
   employees: Employee[];
-  setEmployees: (employees: Employee[]) => void;
+  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>; // Cambiado para aceptar un callback
   addAttendance: (employeeId: number, record: AttendanceRecord) => void;
   updateEmployee: (employeeId: number, updatedData: Partial<Employee>) => void;
   getAttendanceHistory: (employeeId: number) => AttendanceRecord[];
@@ -36,10 +36,10 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         name: "Juan Pérez",
         position: "Desarrollador",
         attendance: [
-          { date: "2025-04-01", time: "08:00", type: "entrada" },
-          { date: "2025-04-01", time: "17:00", type: "salida" },
-          { date: "2025-04-02", time: "08:15", type: "entrada" },
-          { date: "2025-04-02", time: "17:10", type: "salida" },
+          { date: "2025-04-01", time: "08:00", type: "entrada" as "entrada" | "salida" },
+          { date: "2025-04-01", time: "17:00", type: "salida" as "entrada" | "salida" },
+          { date: "2025-04-02", time: "08:15", type: "entrada" as "entrada" | "salida" },
+          { date: "2025-04-02", time: "17:10", type: "salida" as "entrada" | "salida" },
         ],
       },
       {
@@ -47,10 +47,10 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         name: "María López",
         position: "Diseñadora",
         attendance: [
-          { date: "2025-04-01", time: "08:30", type: "entrada" },
-          { date: "2025-04-01", time: "16:45", type: "salida" },
-          { date: "2025-04-02", time: "08:20", type: "entrada" },
-          { date: "2025-04-02", time: "17:00", type: "salida" },
+          { date: "2025-04-01", time: "08:30", type: "entrada" as "entrada" | "salida" },
+          { date: "2025-04-01", time: "16:45", type: "salida" as "entrada" | "salida"},
+          { date: "2025-04-02", time: "08:20", type: "entrada" as "entrada" | "salida"},
+          { date: "2025-04-02", time: "17:00", type: "salida" as "entrada" | "salida"},
         ],
       },
       {
@@ -58,10 +58,10 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         name: "Carlos García",
         position: "Gerente",
         attendance: [
-          { date: "2025-04-01", time: "07:50", type: "entrada" },
-          { date: "2025-04-01", time: "18:00", type: "salida" },
-          { date: "2025-04-02", time: "08:00", type: "entrada" },
-          { date: "2025-04-02", time: "17:30", type: "salida" },
+          { date: "2025-04-01", time: "07:50", type: "entrada" as "entrada" | "salida"},
+          { date: "2025-04-01", time: "18:00", type: "salida" as "entrada" | "salida"},
+          { date: "2025-04-02", time: "08:00", type: "entrada" as "entrada" | "salida"},
+          { date: "2025-04-02", time: "17:30", type: "salida" as "entrada" | "salida"},
         ],
       },
     ];
@@ -74,7 +74,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         date: new Date(record.date).toISOString().split("T")[0], // Normalizar la fecha
       })),
     }));
-
+  
     console.log("Inicializando empleados con asistencia normalizada:", normalizedEmployees);
     setEmployees(normalizedEmployees);
     localStorage.setItem("employees", JSON.stringify(normalizedEmployees));

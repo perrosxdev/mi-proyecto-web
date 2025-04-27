@@ -13,10 +13,11 @@ export default function Login() {
 
   // Listas de usuarios válidos
   const adminUsers = [
-    { id: 1, username: "admin", password: "1234", name: "Admin User", role: "admin" },
+    { id: 1, username: "admin", password: "1234", name: "Admin User", role: "admin" as "admin" },
   ];
+  
   const employeeUsers = [
-    { id: 2, username: "jcbodoque", password: "1234", name: "Juan Carlos Bodoque", role: "employee" },
+    { id: 2, username: "jcbodoque", password: "1234", name: "Juan Carlos Bodoque", role: "employee" as "employee" },
   ];
 
   const handleLogin = (e: React.FormEvent) => {

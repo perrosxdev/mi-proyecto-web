@@ -1,15 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useEmployees } from "@/app/context/EmployeeContext";
+import { useEmployees, AttendanceRecord, Employee } from "@/app/context/EmployeeContext";
 import Modal from "@/app/components/Modal";
 import Calendar from "react-calendar";
+
 import "react-calendar/dist/Calendar.css";
 
 export default function GestionAsistencia() {
   const { employees, setEmployees } = useEmployees();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
-  const [newRecord, setNewRecord] = useState({ date: "", time: "", type: "entrada" });
+  const [newRecord, setNewRecord] = useState<AttendanceRecord>({
+    date: "",
+    time: "",
+    type: "entrada",
+  });
   const [isDateModalOpen, setIsDateModalOpen] = useState(false); // Estado para el modal de fecha
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false); // Estado para el modal de hora
   const [selectedHour, setSelectedHour] = useState("12"); // Hora seleccionada
@@ -121,7 +126,9 @@ export default function GestionAsistencia() {
                 id="type"
                 className="w-full border rounded px-3 py-2"
                 value={newRecord.type}
-                onChange={(e) => setNewRecord({ ...newRecord, type: e.target.value })}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, type: e.target.value as "entrada" | "salida" })
+                }
               >
                 <option value="entrada">Entrada</option>
                 <option value="salida">Salida</option>

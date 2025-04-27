@@ -6,7 +6,6 @@ import Navbar from "./components/Navbar";
 import { UserProvider } from "./context/UserContext";
 import { EmployeeProvider } from "./context/EmployeeContext";
 import { WorkHoursProvider } from "@/app/context/WorkHoursContext";
-import { useState } from "react";
 
 export default function RootLayout({
   children,
@@ -14,7 +13,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname(); // Obtiene la ruta actual
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Estado para controlar el menú
 
   return (
     <html lang="en">
@@ -29,17 +27,9 @@ export default function RootLayout({
         <UserProvider>
           <EmployeeProvider>
             <WorkHoursProvider>
-            {/* Renderiza el Navbar solo si no estás en la ruta de login */}
-            {pathname !== "/" && (
-              <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-            )}
-            <main
-              className={`flex-grow p-4 transition-all duration-300 ${
-                isMenuOpen ? "ml-64" : "ml-0"
-              }`}
-            >
-              {children}
-            </main>
+              {/* Renderiza el Navbar solo si no estás en la ruta de login */}
+              {pathname !== "/" && <Navbar />}
+              <main className="flex-grow p-4">{children}</main>
             </WorkHoursProvider>
           </EmployeeProvider>
         </UserProvider>
