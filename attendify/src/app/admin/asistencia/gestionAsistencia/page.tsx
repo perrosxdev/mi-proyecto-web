@@ -23,7 +23,7 @@ export default function GestionAsistencia() {
       return;
     }
 
-    setEmployees((prevEmployees) =>
+    setEmployees((prevEmployees: Employee[]) =>
       prevEmployees.map((employee) =>
         employee.id === selectedEmployeeId
           ? {
