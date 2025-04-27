@@ -1,5 +1,5 @@
-
 import { ReactNode } from "react";
+
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -9,6 +9,8 @@ interface ModalProps {
 
 export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
   if (!isOpen) return null;
+
+  console.log("Renderizando Modal:", title);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

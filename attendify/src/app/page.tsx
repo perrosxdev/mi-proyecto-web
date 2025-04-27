@@ -2,28 +2,55 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUser } from "./context/UserContext";
 
 export default function Login() {
   const router = useRouter();
+  const { setCurrentUser } = useUser(); // Obtener la función para establecer el usuario actual
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Listas de usuarios válidos
+  const adminUsers = [
+    { id: 1, username: "admin", password: "1234", name: "Admin User", role: "admin" },
+  ];
+  const employeeUsers = [
+    { id: 2, username: "jcbodoque", password: "1234", name: "Juan Carlos Bodoque", role: "employee" },
+  ];
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const validUsername = "admin";
-    const validPassword = "1234";
 
     if (!username || !password) {
       setError("Por favor, completa todos los campos.");
       return;
     }
 
-    if (username === validUsername && password === validPassword) {
-      router.push("/home");
-    } else {
-      setError("Usuario o contraseña incorrectos.");
+    // Verificar si es un administrador
+    const admin = adminUsers.find(
+      (user) => user.username === username && user.password === password
+    );
+
+    if (admin) {
+      setCurrentUser(admin); // Establecer el usuario actual
+      router.push("/admin/home"); // Redirigir al home del administrador
+      return;
     }
+
+    // Verificar si es un empleado
+    const employee = employeeUsers.find(
+      (user) => user.username === username && user.password === password
+    );
+
+    if (employee) {
+      setCurrentUser(employee); // Establecer el usuario actual
+      router.push("/registro"); // Redirigir a la vista de registro
+      return;
+    }
+
+    // Si no coincide con ningún usuario
+    setError("Usuario o contraseña incorrectos.");
   };
 
   return (

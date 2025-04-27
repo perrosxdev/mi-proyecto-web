@@ -1,0 +1,44 @@
+Pantalla de Administrador: Panel de Control
+
+1. Gestión de Empleados
+   - Lista de empleados:
+     - Nombre, posición, y estado actual (presente/ausente).
+   - Acciones:
+     - Agregar, editar o eliminar empleados.
+     - Ver detalles de un empleado (incluyendo historial de asistencia).
+
+2. Historial de Asistencia
+   - Filtros:
+     - Por rango de fechas.
+     - Por empleado.
+     - Por tipo de registro (entrada/salida).
+   - Tabla:
+     - Fecha, hora, tipo (entrada/salida), empleado.
+   - Exportar datos:
+     - Botón para exportar el historial en formatos como CSV o PDF.
+
+3. Gestión de Asistencia
+   - Registrar asistencia manualmente:
+     - Permitir al administrador agregar o corregir registros de asistencia.
+   - Validar registros:
+     - Revisar y aprobar registros sospechosos o incompletos.
+
+4. Configuración
+   - Parámetros del sistema:
+     - Horarios laborales.
+     - Tolerancia para llegadas tarde.
+   - Roles y permisos:
+     - Gestionar roles (administrador, empleado) y sus permisos.
+
+5. Notificaciones
+   - Alertas:
+     - Empleados con asistencia irregular.
+     - Empleados que no han registrado entrada/salida.
+   - Mensajes:
+     - Enviar notificaciones a empleados (por ejemplo, recordatorios de asistencia).
+
+Flujo de Navegación
+   - Inicio: Resumen del Dashboard.
+   - Empleados: Gestión de empleados.
+   - Asistencia: Historial y gestión de registros.
+   - Configuración: Ajustes del sistema.

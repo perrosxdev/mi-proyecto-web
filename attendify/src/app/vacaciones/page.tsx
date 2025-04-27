@@ -1,33 +1,50 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // Importa useRouter
+import { useRouter } from "next/navigation";
+import Link from "next/link"; // Importa Link para la navegación
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css"; // Estilos de react-datepicker
-import Modal from "../components/Modal"; // Importa el componente Modal
+import "react-datepicker/dist/react-datepicker.css";
+import Modal from "../components/Modal";
 
 export default function Vacaciones() {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDateRange, setSelectedDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [minDate, setMinDate] = useState<Date | undefined>();
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
-  const router = useRouter(); // Hook para redirigir
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedReason, setSelectedReason] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-  // Calcula la fecha mínima (15 días después de hoy)
   useEffect(() => {
     const today = new Date();
     const minDateValue = new Date(today);
-    minDateValue.setDate(today.getDate() + 15); // Suma 15 días a la fecha actual
+    minDateValue.setDate(today.getDate() + 15);
     setMinDate(minDateValue);
   }, []);
 
+  const vacationTypes = [
+    { id: 1, name: "Vacaciones Legales" },
+    { id: 2, name: "Vacaciones por Contrato" },
+    { id: 3, name: "Permiso Especial" },
+    { id: 4, name: "Día Administrativo" },
+  ];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsModalOpen(true); // Abre el modal al confirmar
+    if (!selectedDateRange[0] || !selectedDateRange[1]) {
+      setError("Por favor, selecciona un rango de fechas válido.");
+      return;
+    }
+    if (!selectedReason) {
+      setError("Por favor, selecciona una razón.");
+      return;
+    }
+    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false); // Cierra el modal
-    router.push("/home"); // Redirige al home
+    setIsModalOpen(false);
+    router.push("/home");
   };
 
   return (
@@ -37,18 +54,20 @@ export default function Vacaciones() {
           Solicitud de Vacaciones
         </h2>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          {/* Fecha */}
+          {/* Rango de Fechas */}
           <div>
             <label htmlFor="fecha" className="block text-sm font-medium mb-1">
-              Fecha:
+              Rango de Fechas:
             </label>
             <DatePicker
-              selected={selectedDate}
-              onChange={(date) => setSelectedDate(date)} // Actualiza la fecha seleccionada
-              minDate={minDate} // Deshabilita fechas antes de la mínima
+              selectsRange
+              startDate={selectedDateRange[0]}
+              endDate={selectedDateRange[1]}
+              onChange={(update) => setSelectedDateRange(update)}
+              minDate={minDate}
               dateFormat="dd/MM/yyyy"
               className="w-full border rounded px-3 py-2 text-left bg-white"
-              placeholderText="Seleccionar fecha"
+              placeholderText="Seleccionar rango de fechas"
             />
           </div>
 
@@ -57,13 +76,22 @@ export default function Vacaciones() {
             <label htmlFor="razon" className="block text-sm font-medium mb-1">
               Razón:
             </label>
-            <textarea
+            <select
               id="razon"
-              rows={4}
               className="w-full border rounded px-3 py-2"
-              placeholder="Escribe la razón de tu solicitud..."
-            />
+              value={selectedReason}
+              onChange={(e) => setSelectedReason(e.target.value)}
+            >
+              {vacationTypes.map((type) => (
+                <option key={type.id} value={type.name}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {/* Validación de restricciones */}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
           {/* Botón Confirmar */}
           <button
@@ -73,12 +101,21 @@ export default function Vacaciones() {
             Confirmar
           </button>
         </form>
+
+        {/* Botón para Historial de Vacaciones */}
+        <div className="mt-4">
+          <Link href="/vacaciones/historial">
+            <button className="bg-blue-900 text-white font-medium py-2 rounded hover:bg-blue-700 w-full">
+              Ver Historial de Vacaciones
+            </button>
+          </Link>
+        </div>
       </main>
 
       {/* Modal */}
       <Modal
         isOpen={isModalOpen}
-        onClose={handleCloseModal} // Llama a handleCloseModal al cerrar
+        onClose={handleCloseModal}
         title="Solicitud Enviada"
       >
         <p>Tu solicitud de vacaciones se ha enviado correctamente.</p>

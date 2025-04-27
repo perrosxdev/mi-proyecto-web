@@ -1,111 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Modal from "../components/Modal";
+import { useUser } from "@/app/context/UserContext";
+import { useEmployees } from "@/app/context/EmployeeContext";
 
 export default function Registro() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentDate, setCurrentDate] = useState("");
-  const [currentTime, setCurrentTime] = useState("");
-  const router = useRouter();
+  const { currentUser } = useUser(); // Obtener el usuario actual
+  const { addAttendance } = useEmployees();
 
-  useEffect(() => {
+  const handleRegisterAttendance = (type: "entrada" | "salida") => {
+    if (!currentUser) {
+      alert("No se ha detectado un usuario autenticado.");
+      return;
+    }
+
     const now = new Date();
-    const formattedDate = now.toISOString().split("T")[0];
-    const formattedTime = now.toTimeString().split(" ")[0].slice(0, 5);
-    setCurrentDate(formattedDate);
-    setCurrentTime(formattedTime);
-  }, []);
+    const record = {
+      date: now.toISOString().split("T")[0], // Fecha en formato YYYY-MM-DD
+      time: now.toTimeString().split(" ")[0], // Hora en formato HH:mm:ss
+      type,
+    };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    router.push("/home");
+    addAttendance(currentUser.id, record); // Registrar la asistencia del usuario actual
+    alert(`Asistencia de tipo "${type}" registrada correctamente.`);
   };
 
   return (
     <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4 sm:p-8">
-      <main className="bg-gray-100 rounded-lg shadow-md p-6 w-full max-w-md mt-8">
-        <h2 className="text-xl font-bold text-center mb-6">Registro de Asistencia</h2>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          {/* Fecha */}
-          <div className="relative">
-            <label htmlFor="fecha" className="block text-sm font-medium mb-1">
-              Fecha:
-            </label>
-            <input
-              type="date"
-              id="fecha"
-              className="w-full border rounded px-3 py-2"
-              value={currentDate}
-              readOnly
-            />
-            <span
-              onClick={() => document.getElementById("fecha")?.focus()}
-              className="absolute right-3 top-9 cursor-pointer text-gray-500"
+      <main className="bg-gray-100 rounded-lg shadow-md p-6 w-full max-w-4xl mt-8">
+        <h1 className="text-2xl font-bold text-center mb-6 text-blue-900">
+          Registro de Asistencia
+        </h1>
+        <div className="flex flex-col gap-4">
+          <p className="text-lg">
+            Usuario: <strong>{currentUser?.name}</strong>
+          </p>
+          <div className="flex gap-4">
+            <button
+              className="bg-green-600 text-white font-medium py-2 px-4 rounded hover:bg-green-500"
+              onClick={() => handleRegisterAttendance("entrada")}
             >
-              <span className="material-icons">calendar_today</span>
-            </span>
-          </div>
-
-          {/* Hora */}
-          <div className="relative">
-            <label htmlFor="hora" className="block text-sm font-medium mb-1">
-              Hora:
-            </label>
-            <input
-              type="time"
-              id="hora"
-              className="w-full border rounded px-3 py-2"
-              value={currentTime}
-              readOnly
-            />
-            <span
-              onClick={() => document.getElementById("hora")?.focus()}
-              className="absolute right-3 top-9 cursor-pointer text-gray-500"
+              Registrar Entrada
+            </button>
+            <button
+              className="bg-red-600 text-white font-medium py-2 px-4 rounded hover:bg-red-500"
+              onClick={() => handleRegisterAttendance("salida")}
             >
-              <span className="material-icons">access_time</span>
-            </span>
+              Registrar Salida
+            </button>
           </div>
-
-          {/* Tipo de Registro */}
-          <div>
-            <label htmlFor="tipo" className="block text-sm font-medium mb-1">
-              Tipo de Registro:
-            </label>
-            <select
-              id="tipo"
-              className="w-full border rounded px-3 py-2"
-              defaultValue="Entrada"
-            >
-              <option value="Entrada">Entrada</option>
-              <option value="Salida">Salida</option>
-            </select>
-          </div>
-
-          {/* Botón Confirmar */}
-          <button
-            type="submit"
-            className="bg-blue-900 text-white font-medium py-2 rounded hover:bg-blue-700"
-          >
-            Confirmar
-          </button>
-        </form>
+        </div>
       </main>
-
-      {/* Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title="Registro Exitoso"
-      >
-        <p>El registro de asistencia se ha enviado correctamente.</p>
-      </Modal>
     </div>
   );
 }

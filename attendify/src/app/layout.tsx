@@ -1,8 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation"; // Importa usePathname
+import { usePathname } from "next/navigation";
 import "./globals.css";
 import Navbar from "./components/Navbar";
+import { UserProvider } from "./context/UserContext";
+import { EmployeeProvider } from "./context/EmployeeContext";
+import { useState } from "react";
 
 export default function RootLayout({
   children,
@@ -10,6 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname(); // Obtiene la ruta actual
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // Estado para controlar el menú
 
   return (
     <html lang="en">
@@ -21,9 +25,21 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen">
-        {/* Renderiza el Navbar solo si no estás en la ruta de login */}
-        {pathname !== "/" && <Navbar />}
-        <main className="flex-grow">{children}</main>
+        <UserProvider>
+          <EmployeeProvider>
+            {/* Renderiza el Navbar solo si no estás en la ruta de login */}
+            {pathname !== "/" && (
+              <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+            )}
+            <main
+              className={`flex-grow p-4 transition-all duration-300 ${
+                isMenuOpen ? "ml-64" : "ml-0"
+              }`}
+            >
+              {children}
+            </main>
+          </EmployeeProvider>
+        </UserProvider>
       </body>
     </html>
   );
