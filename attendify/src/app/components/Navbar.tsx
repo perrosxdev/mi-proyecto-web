@@ -7,10 +7,10 @@ import BeachAccessIcon from "@mui/icons-material/BeachAccess";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import GroupIcon from "@mui/icons-material/Group";
 import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
 import LogoutIcon from "@mui/icons-material/Logout"; // Importa el ícono de cerrar sesión
 import { useUser } from "../context/UserContext";
 import { Settings as SettingsIcon } from "@mui/icons-material";
+import DateRangeIcon from "@mui/icons-material/DateRange";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false); // Estado para controlar el menú desplegable
@@ -100,6 +100,11 @@ export default function Navbar() {
                 <Link href="/admin/asistencia/gestionAsistencia">
                   <button className="hover:underline text-sm sm:text-base flex items-center gap-2">
                     <AssignmentIcon /> Gestión de Asistencia
+                  </button>
+                </Link>
+                <Link href="/admin/vacaciones">
+                  <button className="hover:underline text-sm sm:text-base flex items-center gap-2">
+                    <DateRangeIcon /> Gestión de Vacaciones
                   </button>
                 </Link>
                 <Link href="/admin/configuracion">

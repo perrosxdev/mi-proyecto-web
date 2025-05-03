@@ -101,7 +101,7 @@ body {
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
+  --primary: #1e3a8a;
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -127,6 +127,53 @@ body {
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+/* Botones de acción primaria */
+.button-primary {
+  @apply bg-primary text-primary-foreground font-bold uppercase rounded px-4 py-2 transition-transform duration-200;
+}
+
+.button-primary:hover {
+  @apply bg-primary/90 scale-105;
+}
+
+.button-primary:active {
+  @apply bg-primary/80 scale-95;
+}
+
+.button-primary:disabled {
+  @apply bg-muted text-muted-foreground cursor-not-allowed;
+}
+
+/* Botones de acción secundaria */
+.button-secondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-secondary:hover {
+  background-color: oklch(0.95 0 0); /* Un tono más oscuro de gris */
+  transform: scale(1.05);
+}
+
+.button-secondary:active {
+  background-color: oklch(0.93 0 0); /* Un tono aún más oscuro */
+  transform: scale(1);
+}
+
+.button-secondary:disabled {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  cursor: not-allowed;
+}
+
 
 @layer base {
   * {

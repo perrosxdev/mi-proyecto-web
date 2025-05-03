@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useEmployees, AttendanceRecord, Employee } from "@/app/context/EmployeeContext";
 import Modal from "@/app/components/Modal";
 import Calendar from "react-calendar";
-
 import "react-calendar/dist/Calendar.css";
 
 export default function GestionAsistencia() {
@@ -52,17 +51,13 @@ export default function GestionAsistencia() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center p-4 sm:p-8"
+      className="container mx-auto px-4 py-8"
       style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
     >
       <main
-        className="rounded-lg shadow-md p-6 w-full max-w-4xl mt-8"
-        style={{ backgroundColor: "var(--card)", color: "var(--card-foreground)" }}
+        className="bg-card rounded-lg shadow p-6"
       >
-        <h1
-          className="text-2xl font-bold text-center mb-6"
-          style={{ color: "var(--primary)" }}
-        >
+      <h1 className="text-2xl font-bold text-center mb-6 text-primary">
           Gestión de Asistencia
         </h1>
 
@@ -100,7 +95,7 @@ export default function GestionAsistencia() {
               </label>
               <button
                 type="button"
-                className="w-full border rounded px-3 py-2 bg-blue-900 text-white"
+                className="w-full border rounded px-3 py-2 bg-blue-800 text-white"
                 onClick={() => setIsDateModalOpen(true)}
               >
                 {newRecord.date ? newRecord.date : "Seleccionar Fecha"}
@@ -112,7 +107,7 @@ export default function GestionAsistencia() {
               </label>
               <button
                 type="button"
-                className="w-full border rounded px-3 py-2 bg-blue-900 text-white"
+                className="w-full border rounded px-3 py-2 bg-blue-800 text-white"
                 onClick={() => setIsTimeModalOpen(true)}
               >
                 {newRecord.time ? newRecord.time : "Seleccionar Hora"}
@@ -124,7 +119,7 @@ export default function GestionAsistencia() {
               </label>
               <select
                 id="type"
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 text-center"
                 value={newRecord.type}
                 onChange={(e) =>
                   setNewRecord({ ...newRecord, type: e.target.value as "entrada" | "salida" })
@@ -137,11 +132,7 @@ export default function GestionAsistencia() {
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <button
               type="submit"
-              className="px-4 py-2 rounded"
-              style={{
-                backgroundColor: "var(--accent)",
-                color: "var(--accent-foreground)",
-              }}
+              className="px-4 py-2 rounded bg-blue-900 text-white"
             >
               Agregar Registro
             </button>
