@@ -48,9 +48,9 @@ export function VacationProvider({ children }: { children: ReactNode }) {
           end_date,
           status,
           reason,
-          employees (name)
+          employees!vacation_requests_employee_id_fkey (name)
         `);
-
+    
       if (error) {
         console.error("Error fetching vacation requests:", error);
       } else {
