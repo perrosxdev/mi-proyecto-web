@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useEmployees, AttendanceRecord, Employee } from "@/app/context/EmployeeContext";
+import {AttendanceRecord, Employee } from "@/app/context/EmployeeContext";
 import Modal from "@/app/components/Modal";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";

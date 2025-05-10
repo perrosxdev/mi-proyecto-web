@@ -32,7 +32,7 @@ export default function Login() {
       `)
       .eq("username", username)
       .eq("password", password)
-      .single();
+      .single(); // Devuelve un único usuario
   
     console.log("Usuario obtenido desde Supabase:", user); // Depuración
   
@@ -46,7 +46,7 @@ export default function Login() {
       setCurrentUser({
         id: user.id,
         username: user.username,
-        name: user.employees?.name || "Sin nombre", // Obtener el nombre desde employees
+        name: user.employees?.[0]?.name || "Sin nombre", // Acceder al primer elemento del arreglo
         role: user.role,
       });
       resolve();
@@ -55,7 +55,7 @@ export default function Login() {
     console.log("Usuario establecido en el contexto:", {
       id: user.id,
       username: user.username,
-      name: user.employees?.name || "Sin nombre",
+      name: user.employees?.[0]?.name || "Sin nombre",
       role: user.role,
     }); // Depuración
   

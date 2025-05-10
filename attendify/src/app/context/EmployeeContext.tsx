@@ -3,13 +3,15 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-interface AttendanceRecord {
+// Exportar el tipo AttendanceRecord
+export interface AttendanceRecord {
   date: string;
   time: string;
   type: "entrada" | "salida";
 }
 
-interface Employee {
+// Exportar el tipo Employee
+export interface Employee {
   id: number;
   name: string;
   position: string;

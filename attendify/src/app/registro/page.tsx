@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@/app/context/UserContext";
 import { useEmployees } from "@/app/context/EmployeeContext";
+import { AttendanceRecord } from "@/app/context/EmployeeContext"; // Importar el tipo
 import { useRouter } from "next/navigation";
 
 export default function Registro() {
@@ -10,7 +11,7 @@ export default function Registro() {
   const { getAttendanceHistory, addAttendance } = useEmployees();
   const router = useRouter();
 
-  const [attendanceHistory, setAttendanceHistory] = useState([]);
+  const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([]); // Especificar el tipo
   const [entryTime, setEntryTime] = useState<string | null>(null); // Hora de entrada
   const [exitTime, setExitTime] = useState<string | null>(null); // Hora de salida
   const [message, setMessage] = useState<string | null>(null); // Mensaje de retroalimentación
@@ -27,7 +28,7 @@ export default function Registro() {
       try {
         // Obtener el historial de asistencia del usuario actual
         const history = getAttendanceHistory(currentUser.id) || [];
-        setAttendanceHistory(history);
+        setAttendanceHistory(history); // Ahora funciona correctamente
 
         const today = new Date().toISOString().split("T")[0]; // Fecha de hoy en formato YYYY-MM-DD
 

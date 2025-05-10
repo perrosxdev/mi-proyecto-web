@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 interface WorkHour {
@@ -12,8 +12,17 @@ interface WorkHour {
   totalHours: string | null; // Duración total en formato HH:mm
 }
 
+interface Interval {
+  start: string;
+  end: string;
+}
+
 interface WorkHoursContextType {
   workHours: WorkHour[];
+  intervals: Interval[]; // Lista de intervalos de trabajo
+  tolerance: number; // Tolerancia en minutos
+  setIntervals: (intervals: Interval[]) => void; // Función para actualizar los intervalos
+  setTolerance: (tolerance: number) => void; // Función para actualizar la tolerancia
   registerStartTime: (employeeId: number) => Promise<void>;
   registerEndTime: (employeeId: number) => Promise<void>;
   fetchWorkHours: (employeeId: number) => Promise<void>;
@@ -23,6 +32,8 @@ const WorkHoursContext = createContext<WorkHoursContextType | undefined>(undefin
 
 export function WorkHoursProvider({ children }: { children: ReactNode }) {
   const [workHours, setWorkHours] = useState<WorkHour[]>([]);
+  const [intervals, setIntervals] = useState<Interval[]>([]); // Inicializar los intervalos
+  const [tolerance, setTolerance] = useState<number>(5); // Inicializar la tolerancia con un valor predeterminado
 
   // Cargar las horas trabajadas de un empleado desde Supabase
   const fetchWorkHours = async (employeeId: number) => {
@@ -124,6 +135,10 @@ export function WorkHoursProvider({ children }: { children: ReactNode }) {
     <WorkHoursContext.Provider
       value={{
         workHours,
+        intervals,
+        tolerance,
+        setIntervals,
+        setTolerance,
         registerStartTime,
         registerEndTime,
         fetchWorkHours,

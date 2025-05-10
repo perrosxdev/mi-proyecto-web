@@ -60,3 +60,7 @@ VALUES
   (2, '2025-05-01', '17:10:00', 'salida'),
   (3, '2025-05-01', '08:45:00', 'entrada'),
   (3, '2025-05-01', '16:50:00', 'salida');
+
+ALTER TABLE vacation_requests
+ADD CONSTRAINT fk_employee
+FOREIGN KEY (employee_id) REFERENCES employees(id);

@@ -8,7 +8,7 @@ import "react-calendar/dist/Calendar.css";
 import Modal from "../components/Modal";
 
 export default function Vacaciones() {
-  const { addVacationRequest } = useVacations();
+  const { addVacationRequest, getEmployeeVacations } = useVacations();
   const { currentUser } = useUser();
   const [selectedDateRange, setSelectedDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [minDate, setMinDate] = useState<Date | undefined>();
@@ -84,6 +84,9 @@ export default function Vacaciones() {
     }
   };
 
+  // Obtener las solicitudes del usuario actual
+  const userVacations = currentUser ? getEmployeeVacations(currentUser.id) : [];
+
   return (
     <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4 sm:p-8">
       <main className="bg-gray-100 rounded-lg shadow-md p-6 w-full max-w-4xl mt-8">
@@ -131,6 +134,51 @@ export default function Vacaciones() {
             Confirmar
           </button>
         </form>
+
+        {/* Sección para mostrar el estado de las solicitudes */}
+        <div className="mt-8">
+          <h2 className="text-lg font-bold mb-4">Estado de tus Solicitudes</h2>
+          {userVacations.length > 0 ? (
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="border border-gray-300 px-4 py-2 text-left">Fecha Inicio</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Fecha Fin</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Razón</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {userVacations.map((vacation) => (
+                  <tr key={vacation.id} className="hover:bg-gray-100">
+                    <td className="border border-gray-300 px-4 py-2">{vacation.startDate}</td>
+                    <td className="border border-gray-300 px-4 py-2">{vacation.endDate}</td>
+                    <td className="border border-gray-300 px-4 py-2">{vacation.reason}</td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      <span
+                        className={`px-2 py-1 rounded ${
+                          vacation.status === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : vacation.status === "rejected"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {vacation.status === "pending"
+                          ? "Pendiente"
+                          : vacation.status === "approved"
+                          ? "Aprobado"
+                          : "Rechazado"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-gray-600">No tienes solicitudes de vacaciones registradas.</p>
+          )}
+        </div>
       </main>
 
       <Modal

@@ -6,11 +6,21 @@ import { supabase } from "@/lib/supabaseClient";
 interface VacationRequest {
   id: number;
   employeeId: number;
-  employeeName: string; // Agregado: Nombre del empleado
+  employeeName: string; // Nombre del empleado
   startDate: string;
   endDate: string;
   status: "pending" | "approved" | "rejected";
   reason: string;
+}
+
+interface SupabaseVacationRequest {
+  id: number;
+  employee_id: number;
+  start_date: string;
+  end_date: string;
+  status: "pending" | "approved" | "rejected";
+  reason: string;
+  employees: { name: string }[]; // Cambiado a un arreglo
 }
 
 interface VacationContextType {
@@ -45,10 +55,10 @@ export function VacationProvider({ children }: { children: ReactNode }) {
         console.error("Error fetching vacation requests:", error);
       } else {
         // Mapear los datos para incluir el nombre del empleado
-        const mappedRequests = (data || []).map((request) => ({
+        const mappedRequests = (data as SupabaseVacationRequest[]).map((request) => ({
           id: request.id,
           employeeId: request.employee_id,
-          employeeName: request.employees?.name || "Empleado no encontrado",
+          employeeName: request.employees?.[0]?.name || "Empleado no encontrado", // Acceder al primer elemento del arreglo
           startDate: request.start_date,
           endDate: request.end_date,
           status: request.status,
@@ -68,11 +78,30 @@ export function VacationProvider({ children }: { children: ReactNode }) {
       end_date: request.endDate,
       reason: request.reason,
       status: "pending",
-    });
+    }).select(`
+      id,
+      employee_id,
+      start_date,
+      end_date,
+      status,
+      reason,
+      employees (name)
+    `);
+
     if (error) {
       console.error("Error adding vacation request:", error);
-    } else {
-      setVacationRequests((prev) => [...prev, ...(data || [])]);
+    } else if (data) {
+      // Agregar la nueva solicitud al estado
+      const newRequests = (data as SupabaseVacationRequest[]).map((request) => ({
+        id: request.id,
+        employeeId: request.employee_id,
+        employeeName: request.employees?.[0]?.name || "Empleado no encontrado", // Acceder al primer elemento del arreglo
+        startDate: request.start_date,
+        endDate: request.end_date,
+        status: request.status,
+        reason: request.reason,
+      }));
+      setVacationRequests((prev) => [...prev, ...newRequests]);
     }
   };
 
