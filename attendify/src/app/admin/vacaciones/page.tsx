@@ -1,9 +1,8 @@
 "use client";
 
 import { useVacations } from "@/app/context/VacationContext";
-import { useEmployees } from "@/app/context/EmployeeContext";
 import { PageHeader } from "@/app/components/PageHeader";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
   Table,
@@ -20,8 +19,12 @@ import {
 
 export default function VacationManagement() {
   const { vacationRequests, updateVacationStatus, getPendingRequests } = useVacations();
-  const { employees } = useEmployees();
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+
+  // Depuración: Verificar los datos obtenidos desde el contexto
+  useEffect(() => {
+    console.log("Solicitudes de vacaciones obtenidas:", vacationRequests);
+  }, [vacationRequests]);
 
   const filteredRequests =
     filter === "all"
@@ -29,10 +32,6 @@ export default function VacationManagement() {
       : filter === "pending"
       ? getPendingRequests()
       : vacationRequests.filter((req) => req.status === filter);
-
-  const getEmployeeName = (id: number) => {
-    return employees.find((e) => e.id === id)?.name || "Empleado no encontrado";
-  };
 
   const handleStatusChange = async (requestId: number, newStatus: "approved" | "rejected") => {
     const confirmMessage =
@@ -91,7 +90,7 @@ export default function VacationManagement() {
             <TableBody>
               {filteredRequests.map((request) => (
                 <TableRow key={request.id} className="hover:bg-muted">
-                  <TableCell>{getEmployeeName(request.employeeId)}</TableCell>
+                  <TableCell>{request.employeeName || "Sin nombre"}</TableCell>
                   <TableCell>{request.startDate}</TableCell>
                   <TableCell>{request.endDate}</TableCell>
                   <TableCell>

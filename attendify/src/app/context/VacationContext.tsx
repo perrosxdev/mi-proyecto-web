@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 interface VacationRequest {
   id: number;
   employeeId: number;
+  employeeName: string; // Agregado: Nombre del empleado
   startDate: string;
   endDate: string;
   status: "pending" | "approved" | "rejected";
@@ -14,7 +15,7 @@ interface VacationRequest {
 
 interface VacationContextType {
   vacationRequests: VacationRequest[];
-  addVacationRequest: (request: Omit<VacationRequest, "id" | "status">) => Promise<void>;
+  addVacationRequest: (request: Omit<VacationRequest, "id" | "status" | "employeeName">) => Promise<void>;
   updateVacationStatus: (requestId: number, status: "approved" | "rejected") => Promise<void>;
   getEmployeeVacations: (employeeId: number) => VacationRequest[];
   getPendingRequests: () => VacationRequest[];
@@ -25,21 +26,42 @@ const VacationContext = createContext<VacationContextType | undefined>(undefined
 export function VacationProvider({ children }: { children: ReactNode }) {
   const [vacationRequests, setVacationRequests] = useState<VacationRequest[]>([]);
 
-  // Cargar solicitudes de vacaciones desde Supabase
+  // Cargar solicitudes de vacaciones desde Supabase con datos del empleado
   useEffect(() => {
     const fetchVacationRequests = async () => {
-      const { data, error } = await supabase.from("vacation_requests").select("*");
+      const { data, error } = await supabase
+        .from("vacation_requests")
+        .select(`
+          id,
+          employee_id,
+          start_date,
+          end_date,
+          status,
+          reason,
+          employees (name)
+        `);
+
       if (error) {
         console.error("Error fetching vacation requests:", error);
       } else {
-        setVacationRequests(data || []);
+        // Mapear los datos para incluir el nombre del empleado
+        const mappedRequests = (data || []).map((request) => ({
+          id: request.id,
+          employeeId: request.employee_id,
+          employeeName: request.employees?.name || "Empleado no encontrado",
+          startDate: request.start_date,
+          endDate: request.end_date,
+          status: request.status,
+          reason: request.reason,
+        }));
+        setVacationRequests(mappedRequests);
       }
     };
     fetchVacationRequests();
   }, []);
 
   // Agregar nueva solicitud
-  const addVacationRequest = async (request: Omit<VacationRequest, "id" | "status">) => {
+  const addVacationRequest = async (request: Omit<VacationRequest, "id" | "status" | "employeeName">) => {
     const { data, error } = await supabase.from("vacation_requests").insert({
       employee_id: request.employeeId,
       start_date: request.startDate,

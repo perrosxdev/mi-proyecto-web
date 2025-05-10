@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 interface User {
@@ -22,6 +22,16 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
+  // Recuperar el usuario del localStorage al cargar la aplicación (solo en el cliente)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = localStorage.getItem("currentUser");
+      if (storedUser) {
+        setCurrentUser(JSON.parse(storedUser));
+      }
+    }
+  }, []);
+
   const login = async (username: string, password: string): Promise<boolean> => {
     const { data: user, error } = await supabase
       .from("users")
@@ -35,18 +45,26 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    setCurrentUser({
+    const userData = {
       id: user.id,
       username: user.username,
       name: user.name,
       role: user.role,
-    });
+    };
+
+    setCurrentUser(userData);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("currentUser", JSON.stringify(userData)); // Guardar en localStorage
+    }
 
     return true;
   };
 
   const logout = () => {
     setCurrentUser(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("currentUser"); // Eliminar del localStorage
+    }
   };
 
   return (

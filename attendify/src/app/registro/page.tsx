@@ -3,36 +3,55 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@/app/context/UserContext";
 import { useEmployees } from "@/app/context/EmployeeContext";
+import { useRouter } from "next/navigation";
 
 export default function Registro() {
   const { currentUser } = useUser(); // Obtener el usuario actual
   const { getAttendanceHistory, addAttendance } = useEmployees();
+  const router = useRouter();
+
   const [attendanceHistory, setAttendanceHistory] = useState([]);
   const [entryTime, setEntryTime] = useState<string | null>(null); // Hora de entrada
   const [exitTime, setExitTime] = useState<string | null>(null); // Hora de salida
   const [message, setMessage] = useState<string | null>(null); // Mensaje de retroalimentación
+  const [loading, setLoading] = useState(true); // Estado de carga
 
-  // Cargar los registros de entrada y salida al montar el componente
+  // Cargar datos del usuario y el historial de asistencia
   useEffect(() => {
-    if (!currentUser) return;
+    const fetchData = async () => {
+      if (!currentUser) {
+        router.push("/"); // Redirigir al login si no hay usuario autenticado
+        return;
+      }
 
-    const history = getAttendanceHistory(currentUser.id) || [];
-    setAttendanceHistory(history);
+      try {
+        // Obtener el historial de asistencia del usuario actual
+        const history = getAttendanceHistory(currentUser.id) || [];
+        setAttendanceHistory(history);
 
-    const today = new Date().toISOString().split("T")[0]; // Fecha de hoy en formato YYYY-MM-DD
+        const today = new Date().toISOString().split("T")[0]; // Fecha de hoy en formato YYYY-MM-DD
 
-    // Buscar la hora de entrada
-    const entry = history.find(
-      (record) => record.date === today && record.type === "entrada"
-    );
-    if (entry) setEntryTime(entry.time);
+        // Buscar la hora de entrada
+        const entry = history.find(
+          (record) => record.date === today && record.type === "entrada"
+        );
+        if (entry) setEntryTime(entry.time);
 
-    // Buscar la hora de salida
-    const exit = history.find(
-      (record) => record.date === today && record.type === "salida"
-    );
-    if (exit) setExitTime(exit.time);
-  }, [currentUser, getAttendanceHistory]);
+        // Buscar la hora de salida
+        const exit = history.find(
+          (record) => record.date === today && record.type === "salida"
+        );
+        if (exit) setExitTime(exit.time);
+      } catch (error) {
+        console.error("Error al cargar el historial de asistencia:", error);
+        setMessage("Ocurrió un error al cargar el historial de asistencia.");
+      } finally {
+        setLoading(false); // Finalizar la carga
+      }
+    };
+
+    fetchData();
+  }, [currentUser, getAttendanceHistory, router]);
 
   const handleRegisterAttendance = async (type: "entrada" | "salida") => {
     if (!currentUser) {
@@ -63,6 +82,10 @@ export default function Registro() {
       setMessage("Ocurrió un error al registrar la asistencia. Inténtalo de nuevo.");
     }
   };
+
+  if (loading) {
+    return <p>Cargando...</p>; // Mostrar un mensaje mientras se cargan los datos
+  }
 
   return (
     <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4 sm:p-8">

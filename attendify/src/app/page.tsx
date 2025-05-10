@@ -14,33 +14,51 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!username || !password) {
       setError("Por favor, completa todos los campos.");
       return;
     }
-
-    // Consultar el usuario en Supabase
+  
+    // Consultar el usuario en Supabase con un JOIN para obtener el nombre del empleado
     const { data: user, error: loginError } = await supabase
       .from("users")
-      .select("*")
+      .select(`
+        id,
+        username,
+        role,
+        employee_id,
+        employees (name)
+      `)
       .eq("username", username)
       .eq("password", password)
       .single();
-
+  
+    console.log("Usuario obtenido desde Supabase:", user); // Depuración
+  
     if (loginError || !user) {
       setError("Usuario o contraseña incorrectos.");
       return;
     }
-
+  
     // Establecer el usuario actual en el contexto
-    setCurrentUser({
+    await new Promise<void>((resolve) => {
+      setCurrentUser({
+        id: user.id,
+        username: user.username,
+        name: user.employees?.name || "Sin nombre", // Obtener el nombre desde employees
+        role: user.role,
+      });
+      resolve();
+    });
+  
+    console.log("Usuario establecido en el contexto:", {
       id: user.id,
       username: user.username,
-      name: user.name,
+      name: user.employees?.name || "Sin nombre",
       role: user.role,
-    });
-
+    }); // Depuración
+  
     // Redirigir según el rol del usuario
     if (user.role === "admin") {
       router.push("/admin/home");

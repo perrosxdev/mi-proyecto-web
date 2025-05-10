@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useVacations } from "@/app/context/VacationContext";
 import { useUser } from "@/app/context/UserContext";
 import Calendar from "react-calendar";
@@ -16,7 +15,7 @@ export default function Vacaciones() {
   const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
+  const [successMessage, setSuccessMessage] = useState(""); // Mensaje de éxito
 
   const vacationTypes = [
     { id: 1, name: "Vacaciones Legales", minDays: 15 },
@@ -75,8 +74,11 @@ export default function Vacaciones() {
         reason: selectedReason,
       });
 
-      alert("Solicitud de vacaciones enviada correctamente.");
-      router.push("/home");
+      // Mostrar mensaje de éxito y limpiar el formulario
+      setSuccessMessage("Solicitud de vacaciones enviada correctamente.");
+      setSelectedDateRange([null, null]);
+      setSelectedReason("");
+      setError("");
     } else {
       setError("No se pudo identificar al usuario actual.");
     }
@@ -120,6 +122,7 @@ export default function Vacaciones() {
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
+          {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>}
 
           <button
             type="submit"
@@ -128,15 +131,6 @@ export default function Vacaciones() {
             Confirmar
           </button>
         </form>
-
-        <div className="mt-4">
-          <button
-            className="px-4 py-2 rounded font-medium w-full bg-blue-900 text-white hover:bg-blue-700"
-            onClick={() => router.push("/vacaciones/historial")}
-          >
-            Ver Historial de Vacaciones
-          </button>
-        </div>
       </main>
 
       <Modal
