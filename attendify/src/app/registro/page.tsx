@@ -59,17 +59,18 @@ export default function Registro() {
       setMessage("No se ha detectado un usuario autenticado.");
       return;
     }
-
+  
     const now = new Date();
-    const record = {
+    const record: AttendanceRecord = {
+      employee_id: currentUser.id, // Agregar el campo employee_id
       date: now.toISOString().split("T")[0], // Fecha en formato YYYY-MM-DD
       time: now.toTimeString().split(" ")[0], // Hora en formato HH:mm:ss
       type,
     };
-
+  
     try {
       await addAttendance(currentUser.id, record); // Registrar la asistencia del usuario actual
-
+  
       // Actualizar los tiempos de entrada o salida
       if (type === "entrada") {
         setEntryTime(record.time);

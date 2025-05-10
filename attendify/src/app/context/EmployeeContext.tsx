@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 // Exportar el tipo AttendanceRecord
 export interface AttendanceRecord {
+  employee_id: number;
   date: string;
   time: string;
   type: "entrada" | "salida";
@@ -34,15 +35,24 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchEmployees = async () => {
       const { data, error } = await supabase.from("employees").select(`
-        id, name, position,
-        attendance: attendance (date, time, type)
+        id, 
+        name, 
+        position,
+        attendance: attendance (employee_id, date, time, type) -- Incluir la relación attendance
       `);
+
       if (error) {
         console.error("Error fetching employees:", error);
       } else {
-        setEmployees(data || []);
+        // Asignar un valor predeterminado para attendance si no se devuelve
+        const mappedEmployees = (data || []).map((employee: any) => ({
+          ...employee,
+          attendance: employee.attendance || [], // Valor predeterminado
+        }));
+        setEmployees(mappedEmployees);
       }
     };
+
     fetchEmployees();
   }, []);
 

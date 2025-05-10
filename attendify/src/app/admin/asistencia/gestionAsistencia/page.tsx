@@ -1,46 +1,100 @@
 "use client";
 
-import { useState } from "react";
-import {AttendanceRecord, Employee } from "@/app/context/EmployeeContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { AttendanceRecord, Employee } from "@/app/context/EmployeeContext";
 import Modal from "@/app/components/Modal";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
 export default function GestionAsistencia() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>([]); // Lista de empleados
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null); // Empleado seleccionado
   const [newRecord, setNewRecord] = useState<AttendanceRecord>({
+    employee_id: 0, // Valor predeterminado para employee_id
     date: "",
     time: "",
     type: "entrada",
-  });
-  const [isDateModalOpen, setIsDateModalOpen] = useState(false); // Estado para el modal de fecha
+  });const [isDateModalOpen, setIsDateModalOpen] = useState(false); // Estado para el modal de fecha
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false); // Estado para el modal de hora
   const [selectedHour, setSelectedHour] = useState("12"); // Hora seleccionada
   const [selectedMinute, setSelectedMinute] = useState("00"); // Minuto seleccionado
   const [error, setError] = useState("");
 
+  // Cargar empleados desde Supabase (excluyendo al administrador)
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        // Paso 1: Obtener los employee_id de los administradores
+        const { data: adminUsers, error: adminError } = await supabase
+          .from("users")
+          .select("employee_id")
+          .eq("role", "admin");
+  
+        if (adminError) {
+          console.error("Error fetching admin users:", adminError);
+          return;
+        }
+  
+        // Extraer los IDs de los administradores
+        const adminEmployeeIds = adminUsers.map((user) => user.employee_id);
+  
+        // Paso 2: Obtener los empleados excluyendo a los administradores
+        const { data: employeesData, error: employeesError } = await supabase
+          .from("employees")
+          .select(`
+            id, 
+            name, 
+            position,
+            attendance: attendance (employee_id, date, time, type) -- Incluir la relación attendance
+          `)
+          .not("id", "in", `(${adminEmployeeIds.join(",")})`); // Excluir los IDs de los administradores
+  
+        if (employeesError) {
+          console.error("Error fetching employees:", employeesError);
+          return;
+        }
+  
+        // Mapear los empleados para incluir un valor predeterminado para attendance
+        const mappedEmployees = (employeesData || []).map((employee: any) => ({
+          ...employee,
+          attendance: employee.attendance || [], // Valor predeterminado
+        }));
+  
+        setEmployees(mappedEmployees);
+      } catch (error) {
+        console.error("Unexpected error fetching employees:", error);
+      }
+    };
+  
+    fetchEmployees();
+  }, []);
+
   // Agregar o corregir un registro de asistencia
-  const handleAddRecord = () => {
+  const handleAddRecord = async () => {
     if (!selectedEmployeeId || !newRecord.date || !newRecord.time) {
       setError("Por favor, completa todos los campos.");
       return;
     }
 
-    setEmployees((prevEmployees: Employee[]) =>
-      prevEmployees.map((employee) =>
-        employee.id === selectedEmployeeId
-          ? {
-              ...employee,
-              attendance: [...employee.attendance, newRecord],
-            }
-          : employee
-      ) as Employee[]
-    );
+    const { error } = await supabase.from("attendance").insert({
+      employee_id: selectedEmployeeId,
+      date: newRecord.date,
+      time: newRecord.time,
+      type: newRecord.type,
+    });
 
-    setNewRecord({ date: "", time: "", type: "entrada" });
-    setError("");
-    alert("Registro de asistencia agregado correctamente.");
+    if (error) {
+      console.error("Error adding attendance record:", error);
+      setError("Ocurrió un error al agregar el registro.");
+    } else {
+      alert("Registro de asistencia agregado correctamente.");
+      setNewRecord({
+        ...newRecord,
+        date: new Date().toISOString().split("T")[0], // Usa la fecha actual como ejemplo
+      });
+      setError("");
+    }
   };
 
   // Guardar la hora seleccionada
@@ -54,10 +108,8 @@ export default function GestionAsistencia() {
       className="container mx-auto px-4 py-8"
       style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
     >
-      <main
-        className="bg-card rounded-lg shadow p-6"
-      >
-      <h1 className="text-2xl font-bold text-center mb-6 text-primary">
+      <main className="bg-card rounded-lg shadow p-6">
+        <h1 className="text-2xl font-bold text-center mb-6 text-primary">
           Gestión de Asistencia
         </h1>
 

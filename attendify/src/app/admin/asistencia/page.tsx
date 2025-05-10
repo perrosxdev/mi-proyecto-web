@@ -1,53 +1,104 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/app/components/Modal";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { useEmployees } from "@/app/context/EmployeeContext";
+import { supabase } from "@/lib/supabaseClient";
+import { Employee } from "@/app/context/EmployeeContext"; // Importar la interfaz Employee
 
 export default function AsistenciaEmpleados() {
-  const { employees } = useEmployees();
+  const [employees, setEmployees] = useState<Employee[]>([]); // Cambiar el tipo a Employee[]
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [recordType, setRecordType] = useState<string>(""); // Filtro por tipo de registro
   const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
+  const [filteredAttendanceHistory, setFilteredAttendanceHistory] = useState<any[]>([]); // Estado para los registros filtrados
 
   // Normalizar una fecha para ignorar la hora (establecerla a las 00:00:00)
   const normalizeDate = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   };
 
+  // Cargar empleados y registros de asistencia desde Supabase
+  useEffect(() => {
+    const fetchEmployeesWithAttendance = async () => {
+      try {
+        // Obtener empleados
+        const { data: employeesData, error: employeesError } = await supabase
+          .from("employees")
+          .select("id, name, position");
+
+        if (employeesError) {
+          console.error("Error fetching employees:", employeesError);
+          return;
+        }
+
+        // Obtener registros de asistencia
+        const { data: attendanceData, error: attendanceError } = await supabase
+          .from("attendance")
+          .select("employee_id, date, time, type");
+
+        if (attendanceError) {
+          console.error("Error fetching attendance records:", attendanceError);
+          return;
+        }
+
+        // Mapear los registros de asistencia a los empleados
+        const employeesWithAttendance = employeesData.map((employee) => ({
+          ...employee,
+          attendance: attendanceData.filter(
+            (record) => record.employee_id === employee.id
+          ),
+        }));
+
+        setEmployees(employeesWithAttendance);
+      } catch (error) {
+        console.error("Unexpected error fetching employees and attendance:", error);
+      }
+    };
+
+    fetchEmployeesWithAttendance();
+  }, []); // Ejecutar solo al cargar la página
+
   // Filtrar registros según los filtros seleccionados
-  const filteredAttendanceHistory = employees.flatMap((employee) =>
-    employee.attendance
-      .filter((record) => {
-        // Filtro por empleado
-        if (selectedEmployeeId !== null && employee.id !== selectedEmployeeId) {
-          return false;
-        }
+  useEffect(() => {
+    const filterAttendance = () => {
+      const filtered = employees.flatMap((employee) =>
+        employee.attendance
+          .filter((record) => {
+            // Filtro por empleado
+            if (selectedEmployeeId !== null && employee.id !== selectedEmployeeId) {
+              return false;
+            }
 
-        // Filtro por rango de fechas
-        const recordDate = normalizeDate(new Date(record.date)).getTime();
-        const start = startDate ? normalizeDate(startDate).getTime() : null;
-        const end = endDate ? normalizeDate(endDate).getTime() : null;
+            // Filtro por rango de fechas
+            const recordDate = normalizeDate(new Date(record.date)).getTime();
+            const start = startDate ? normalizeDate(startDate).getTime() : null;
+            const end = endDate ? normalizeDate(endDate).getTime() : null;
 
-        if (start !== null && recordDate < start) return false;
-        if (end !== null && recordDate > end) return false; // Incluir el día final
+            if (start !== null && recordDate < start) return false;
+            if (end !== null && recordDate > end) return false; // Incluir el día final
 
-        // Filtro por tipo de registro
-        if (recordType && record.type !== recordType) {
-          return false;
-        }
+            // Filtro por tipo de registro
+            if (recordType && record.type !== recordType) {
+              return false;
+            }
 
-        return true;
-      })
-      .map((record) => ({
-        ...record,
-        employeeName: employee.name,
-      }))
-  );
+            return true;
+          })
+          .map((record) => ({
+            ...record,
+            employeeName: employee.name,
+          }))
+      );
+
+      setFilteredAttendanceHistory(filtered);
+    };
+
+    filterAttendance();
+  }, [employees, selectedEmployeeId, startDate, endDate, recordType]); // Dependencias para actualizar automáticamente
 
   return (
     <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4 sm:p-8">
@@ -143,28 +194,26 @@ export default function AsistenciaEmpleados() {
         <div className="mt-6">
           <h2 className="text-lg font-bold mb-4">Registros Filtrados</h2>
           {filteredAttendanceHistory.length > 0 ? (
-            <>
-              <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="border border-gray-300 px-4 py-2 text-left">Fecha</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Hora</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Tipo</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Empleado</th>
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="border border-gray-300 px-4 py-2 text-left">Fecha</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Hora</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Tipo</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Empleado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAttendanceHistory.map((record, index) => (
+                  <tr key={index} className="hover:bg-gray-100">
+                    <td className="border border-gray-300 px-4 py-2">{record.date}</td>
+                    <td className="border border-gray-300 px-4 py-2">{record.time}</td>
+                    <td className="border border-gray-300 px-4 py-2">{record.type}</td>
+                    <td className="border border-gray-300 px-4 py-2">{record.employeeName}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredAttendanceHistory.map((record, index) => (
-                    <tr key={index} className="hover:bg-gray-100">
-                      <td className="border border-gray-300 px-4 py-2">{record.date}</td>
-                      <td className="border border-gray-300 px-4 py-2">{record.time}</td>
-                      <td className="border border-gray-300 px-4 py-2">{record.type}</td>
-                      <td className="border border-gray-300 px-4 py-2">{record.employeeName}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
+                ))}
+              </tbody>
+            </table>
           ) : (
             <p className="text-gray-600">No hay registros que coincidan con los filtros.</p>
           )}
