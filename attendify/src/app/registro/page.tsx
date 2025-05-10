@@ -3,38 +3,40 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@/app/context/UserContext";
 import { useEmployees } from "@/app/context/EmployeeContext";
-import { useWorkHours } from "@/app/context/WorkHoursContext";
 
 export default function Registro() {
   const { currentUser } = useUser(); // Obtener el usuario actual
   const { getAttendanceHistory, addAttendance } = useEmployees();
-  const { intervals, tolerance } = useWorkHours(); // Obtener los horarios laborales y la tolerancia
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
   const [entryTime, setEntryTime] = useState<string | null>(null); // Hora de entrada
   const [exitTime, setExitTime] = useState<string | null>(null); // Hora de salida
+  const [message, setMessage] = useState<string | null>(null); // Mensaje de retroalimentación
 
   // Cargar los registros de entrada y salida al montar el componente
   useEffect(() => {
     if (!currentUser) return;
 
-    const attendanceHistory = getAttendanceHistory(currentUser.id);
+    const history = getAttendanceHistory(currentUser.id) || [];
+    setAttendanceHistory(history);
+
     const today = new Date().toISOString().split("T")[0]; // Fecha de hoy en formato YYYY-MM-DD
 
     // Buscar la hora de entrada
-    const entry = attendanceHistory.find(
+    const entry = history.find(
       (record) => record.date === today && record.type === "entrada"
     );
     if (entry) setEntryTime(entry.time);
 
     // Buscar la hora de salida
-    const exit = attendanceHistory.find(
+    const exit = history.find(
       (record) => record.date === today && record.type === "salida"
     );
     if (exit) setExitTime(exit.time);
   }, [currentUser, getAttendanceHistory]);
 
-  const handleRegisterAttendance = (type: "entrada" | "salida") => {
+  const handleRegisterAttendance = async (type: "entrada" | "salida") => {
     if (!currentUser) {
-      alert("No se ha detectado un usuario autenticado.");
+      setMessage("No se ha detectado un usuario autenticado.");
       return;
     }
 
@@ -45,38 +47,20 @@ export default function Registro() {
       type,
     };
 
-    addAttendance(currentUser.id, record); // Registrar la asistencia del usuario actual
+    try {
+      await addAttendance(currentUser.id, record); // Registrar la asistencia del usuario actual
 
-    // Actualizar los tiempos de entrada o salida
-    if (type === "entrada") {
-      setEntryTime(record.time);
-    } else if (type === "salida") {
-      setExitTime(record.time);
-    }
-  };
-
-  const isWithinWorkHours = (time: string) => {
-    const [currentHour, currentMinute] = time.split(":").map(Number);
-    const currentTime = currentHour * 60 + currentMinute;
-
-    return intervals.some(({ start, end }) => {
-      const [startHour, startMinute] = start.split(":").map(Number);
-      const [endHour, endMinute] = end.split(":").map(Number);
-
-      const startTime = startHour * 60 + startMinute;
-      const endTime = endHour * 60 + endMinute;
-
-      return currentTime >= startTime && currentTime <= endTime + tolerance;
-    });
-  };
-
-  const getWorkStatus = () => {
-    if (entryTime && !exitTime) {
-      return isWithinWorkHours(entryTime) ? "Trabajando (Dentro del horario)" : "Trabajando (Fuera del horario)";
-    } else if (entryTime && exitTime) {
-      return "Fuera de horario";
-    } else {
-      return "Sin actividad registrada";
+      // Actualizar los tiempos de entrada o salida
+      if (type === "entrada") {
+        setEntryTime(record.time);
+        setMessage("Entrada registrada correctamente.");
+      } else if (type === "salida") {
+        setExitTime(record.time);
+        setMessage("Salida registrada correctamente.");
+      }
+    } catch (error) {
+      console.error("Error al registrar la asistencia:", error);
+      setMessage("Ocurrió un error al registrar la asistencia. Inténtalo de nuevo.");
     }
   };
 
@@ -94,23 +78,8 @@ export default function Registro() {
         </h1>
         <div className="flex flex-col gap-4">
           <p className="text-lg">
-            Usuario: <strong>{currentUser?.name}</strong>
+            Usuario: <strong>{currentUser?.name || "No autenticado"}</strong>
           </p>
-
-          {/* Mostrar los horarios laborales */}
-          <div className="p-4 bg-gray-100 rounded shadow">
-            <h2 className="text-lg font-bold mb-2 text-blue-900">Horario Laboral</h2>
-            <ul className="list-disc pl-6">
-              {intervals.map((interval, index) => (
-                <li key={index} className="text-blue-900">
-                  {interval.start} - {interval.end}
-                </li>
-              ))}
-            </ul>
-            <p className="text-sm text-gray-600 mt-2">
-              Tolerancia: <strong>{tolerance} minutos</strong>
-            </p>
-          </div>
 
           <div className="flex gap-4">
             {/* Botón para registrar entrada */}
@@ -154,10 +123,26 @@ export default function Registro() {
             <p className="text-blue-900 font-medium">
               Hora de Salida: <strong>{exitTime || "No registrada"}</strong>
             </p>
-            <p className="text-blue-900 font-medium">
-              Estado: <strong>{getWorkStatus()}</strong>
-            </p>
           </div>
+
+          {/* Mostrar el historial de asistencia */}
+          <div className="mt-4">
+            <h2 className="text-lg font-bold mb-2 text-blue-900">Historial de Asistencia</h2>
+            <ul className="list-disc pl-6">
+              {attendanceHistory.length > 0 ? (
+                attendanceHistory.map((record, index) => (
+                  <li key={index} className="text-blue-900">
+                    {record.date} - {record.time} ({record.type})
+                  </li>
+                ))
+              ) : (
+                <p className="text-gray-600">No hay registros de asistencia disponibles.</p>
+              )}
+            </ul>
+          </div>
+
+          {/* Mensaje de retroalimentación */}
+          {message && <p className="text-green-600 font-medium">{message}</p>}
         </div>
       </main>
     </div>

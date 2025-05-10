@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // Importa Link para la navegación
+import { useVacations } from "@/app/context/VacationContext";
+import { useUser } from "@/app/context/UserContext";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Modal from "../components/Modal";
 
 export default function Vacaciones() {
+  const { addVacationRequest } = useVacations();
+  const { currentUser } = useUser();
   const [selectedDateRange, setSelectedDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [minDate, setMinDate] = useState<Date | undefined>();
-  const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false); // Modal para rango de fechas
+  const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
@@ -23,7 +26,6 @@ export default function Vacaciones() {
   ];
 
   useEffect(() => {
-    // Actualizar la fecha mínima según el tipo de vacaciones seleccionado
     const today = new Date();
     const selectedVacationType = vacationTypes.find((type) => type.name === selectedReason);
     if (selectedVacationType) {
@@ -31,11 +33,11 @@ export default function Vacaciones() {
       minDateValue.setDate(today.getDate() + selectedVacationType.minDays);
       setMinDate(minDateValue);
     } else {
-      setMinDate(today); // Si no hay tipo seleccionado, usar hoy como mínimo
+      setMinDate(today);
     }
   }, [selectedReason]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedDateRange[0] || !selectedDateRange[1]) {
@@ -65,37 +67,27 @@ export default function Vacaciones() {
       return;
     }
 
-    alert("Solicitud de vacaciones enviada correctamente.");
-    router.push("/home");
+    if (currentUser) {
+      await addVacationRequest({
+        employeeId: currentUser.id,
+        startDate: selectedDateRange[0]!.toISOString().split("T")[0],
+        endDate: selectedDateRange[1]!.toISOString().split("T")[0],
+        reason: selectedReason,
+      });
+
+      alert("Solicitud de vacaciones enviada correctamente.");
+      router.push("/home");
+    } else {
+      setError("No se pudo identificar al usuario actual.");
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4 sm:p-8">
-      <main
-        className="bg-gray-100 rounded-lg shadow-md p-6 w-full max-w-4xl mt-8"
-        style={{ backgroundColor: "var(--card)", color: "var(--card-foreground)" }}
-      >
-        <h2
-          className="text-2xl font-bold text-center mb-6"
-          style={{ color: "var(--primary)" }}
-        >
-          Solicitud de Vacaciones
-        </h2>
-
-        {/* Mensaje sobre la anticipación */}
-        <p className="text-sm text-gray-600 mb-4">
-          Las solicitudes de vacaciones tienen diferentes requisitos de anticipación:
-        </p>
-        <ul className="text-sm text-gray-600 mb-4 list-disc pl-6">
-          {vacationTypes.map((type) => (
-            <li key={type.id}>
-              <strong>{type.name}:</strong> {type.minDays === 0 ? "el mismo día" : `con ${type.minDays} días de anticipación`}
-            </li>
-          ))}
-        </ul>
+      <main className="bg-gray-100 rounded-lg shadow-md p-6 w-full max-w-4xl mt-8">
+        <h2 className="text-2xl font-bold text-center mb-6">Solicitud de Vacaciones</h2>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          {/* Botón para rango de fechas */}
           <div>
             <button
               type="button"
@@ -108,7 +100,6 @@ export default function Vacaciones() {
             </button>
           </div>
 
-          {/* Razón */}
           <div>
             <label htmlFor="razon" className="block text-sm font-medium mb-1">
               Razón:
@@ -128,39 +119,26 @@ export default function Vacaciones() {
             </select>
           </div>
 
-          {/* Validación de restricciones */}
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          {/* Botón Confirmar */}
           <button
             type="submit"
-            className="px-4 py-2 rounded font-medium"
-            style={{
-              backgroundColor: "#1C398E",
-              color: "#FFFFFF",
-            }}
+            className="px-4 py-2 rounded font-medium bg-blue-900 text-white hover:bg-blue-700"
           >
             Confirmar
           </button>
         </form>
 
-        {/* Botón para Historial de Vacaciones */}
         <div className="mt-4">
-          <Link href="/vacaciones/historial">
-            <button
-              className="px-4 py-2 rounded font-medium w-full"
-              style={{
-                backgroundColor: "#1C398E",
-                color: "#FFFFFF",
-              }}
-            >
-              Ver Historial de Vacaciones
-            </button>
-          </Link>
+          <button
+            className="px-4 py-2 rounded font-medium w-full bg-blue-900 text-white hover:bg-blue-700"
+            onClick={() => router.push("/vacaciones/historial")}
+          >
+            Ver Historial de Vacaciones
+          </button>
         </div>
       </main>
 
-      {/* Modal para rango de fechas */}
       <Modal
         isOpen={isDateRangeModalOpen}
         onClose={() => setIsDateRangeModalOpen(false)}

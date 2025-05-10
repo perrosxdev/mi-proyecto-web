@@ -7,7 +7,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
 export default function GestionAsistencia() {
-  const { employees, setEmployees } = useEmployees();
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
   const [newRecord, setNewRecord] = useState<AttendanceRecord>({
     date: "",

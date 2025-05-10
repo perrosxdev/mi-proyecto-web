@@ -34,8 +34,21 @@ export default function VacationManagement() {
     return employees.find((e) => e.id === id)?.name || "Empleado no encontrado";
   };
 
-  const handleStatusChange = (requestId: number, newStatus: "approved" | "rejected") => {
-    updateVacationStatus(requestId, newStatus);
+  const handleStatusChange = async (requestId: number, newStatus: "approved" | "rejected") => {
+    const confirmMessage =
+      newStatus === "approved"
+        ? "¿Estás seguro de que deseas aprobar esta solicitud?"
+        : "¿Estás seguro de que deseas rechazar esta solicitud?";
+  
+    if (window.confirm(confirmMessage)) {
+      try {
+        await updateVacationStatus(requestId, newStatus);
+        alert(`La solicitud ha sido ${newStatus === "approved" ? "aprobada" : "rechazada"} correctamente.`);
+      } catch (error) {
+        console.error("Error al actualizar el estado de la solicitud:", error);
+        alert("Ocurrió un error al actualizar el estado de la solicitud. Inténtalo de nuevo.");
+      }
+    }
   };
 
   return (

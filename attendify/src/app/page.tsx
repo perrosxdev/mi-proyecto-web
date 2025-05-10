@@ -3,24 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useUser } from "./context/UserContext";
+import { supabase } from "@/lib/supabaseClient"; // Importar el cliente de Supabase
 
 export default function Login() {
   const router = useRouter();
-  const { setCurrentUser } = useUser(); // Obtener la función para establecer el usuario actual
+  const { setCurrentUser } = useUser();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Listas de usuarios válidos
-  const adminUsers = [
-    { id: 1, username: "admin", password: "1234", name: "Admin User", role: "admin" as "admin" },
-  ];
-  
-  const employeeUsers = [
-    { id: 2, username: "jcbodoque", password: "1234", name: "Juan Carlos Bodoque", role: "employee" as "employee" },
-  ];
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!username || !password) {
@@ -28,30 +20,33 @@ export default function Login() {
       return;
     }
 
-    // Verificar si es un administrador
-    const admin = adminUsers.find(
-      (user) => user.username === username && user.password === password
-    );
+    // Consultar el usuario en Supabase
+    const { data: user, error: loginError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("username", username)
+      .eq("password", password)
+      .single();
 
-    if (admin) {
-      setCurrentUser(admin); // Establecer el usuario actual
-      router.push("/admin/home"); // Redirigir al home del administrador
+    if (loginError || !user) {
+      setError("Usuario o contraseña incorrectos.");
       return;
     }
 
-    // Verificar si es un empleado
-    const employee = employeeUsers.find(
-      (user) => user.username === username && user.password === password
-    );
+    // Establecer el usuario actual en el contexto
+    setCurrentUser({
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      role: user.role,
+    });
 
-    if (employee) {
-      setCurrentUser(employee); // Establecer el usuario actual
-      router.push("/registro"); // Redirigir a la vista de registro
-      return;
+    // Redirigir según el rol del usuario
+    if (user.role === "admin") {
+      router.push("/admin/home");
+    } else if (user.role === "employee") {
+      router.push("/registro");
     }
-
-    // Si no coincide con ningún usuario
-    setError("Usuario o contraseña incorrectos.");
   };
 
   return (

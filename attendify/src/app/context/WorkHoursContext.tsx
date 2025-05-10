@@ -1,53 +1,132 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
-import { format, toDate } from "date-fns-tz";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
-interface WorkInterval {
-  start: string; // Hora de inicio (HH:mm)
-  end: string; // Hora de fin (HH:mm)
+interface WorkHour {
+  id: number;
+  employeeId: number;
+  date: string;
+  startTime: string;
+  endTime: string | null;
+  totalHours: string | null; // Duración total en formato HH:mm
 }
 
 interface WorkHoursContextType {
-  intervals: WorkInterval[]; // Intervalos de trabajo
-  tolerance: number; // Tolerancia en minutos
-  setIntervals: (intervals: WorkInterval[]) => void;
-  setTolerance: (tolerance: number) => void;
-  hasCustomWorkHours: boolean; // Indica si el administrador definió un horario personalizado
+  workHours: WorkHour[];
+  registerStartTime: (employeeId: number) => Promise<void>;
+  registerEndTime: (employeeId: number) => Promise<void>;
+  fetchWorkHours: (employeeId: number) => Promise<void>;
 }
 
 const WorkHoursContext = createContext<WorkHoursContextType | undefined>(undefined);
 
 export function WorkHoursProvider({ children }: { children: ReactNode }) {
-  const [intervals, setIntervals] = useState<WorkInterval[]>([
-    { start: "08:00", end: "13:00" },
-    { start: "14:00", end: "16:00" },
-  ]);
-  const [tolerance, setTolerance] = useState<number>(10); // Tolerancia predeterminada
+  const [workHours, setWorkHours] = useState<WorkHour[]>([]);
 
-  const hasCustomWorkHours = intervals.length > 0; // Verifica si hay horarios personalizados
+  // Cargar las horas trabajadas de un empleado desde Supabase
+  const fetchWorkHours = async (employeeId: number) => {
+    const { data, error } = await supabase
+      .from("work_hours")
+      .select("*")
+      .eq("employee_id", employeeId);
 
-  // Convertir una hora a la zona horaria de Chile
-  const convertToChileTime = (time: string) => {
-    const date = toDate(`1970-01-01T${time}:00`, { timeZone: "UTC" }); // Crear una fecha en UTC
-    const chileTime = toDate(date, { timeZone: "America/Santiago" }); // Convertir a la zona horaria de Chile
-    return format(chileTime, "HH:mm"); // Formatear la hora
+    if (error) {
+      console.error("Error fetching work hours:", error);
+    } else {
+      setWorkHours(data || []);
+    }
   };
 
-  // Convertir los intervalos al horario de Chile
-  const intervalsInChileTime = intervals.map((interval) => ({
-    start: convertToChileTime(interval.start),
-    end: convertToChileTime(interval.end),
-  }));
+  // Registrar la hora de entrada
+  const registerStartTime = async (employeeId: number) => {
+    const today = new Date().toISOString().split("T")[0]; // Fecha actual en formato YYYY-MM-DD
+    const now = new Date().toTimeString().split(" ")[0]; // Hora actual en formato HH:mm:ss
+
+    // Verificar si ya existe un registro para hoy
+    const { data: existingRecord, error: fetchError } = await supabase
+      .from("work_hours")
+      .select("*")
+      .eq("employee_id", employeeId)
+      .eq("date", today)
+      .single();
+
+    if (fetchError && fetchError.code !== "PGRST116") {
+      console.error("Error checking existing record:", fetchError);
+      return;
+    }
+
+    if (existingRecord) {
+      console.warn("Ya existe un registro de entrada para hoy.");
+      return;
+    }
+
+    // Insertar un nuevo registro con la hora de entrada
+    const { error } = await supabase.from("work_hours").insert({
+      employee_id: employeeId,
+      date: today,
+      start_time: now,
+    });
+
+    if (error) {
+      console.error("Error registering start time:", error);
+    } else {
+      await fetchWorkHours(employeeId); // Actualizar los registros locales
+    }
+  };
+
+  // Registrar la hora de salida
+  const registerEndTime = async (employeeId: number) => {
+    const today = new Date().toISOString().split("T")[0]; // Fecha actual en formato YYYY-MM-DD
+    const now = new Date().toTimeString().split(" ")[0]; // Hora actual en formato HH:mm:ss
+
+    // Verificar si existe un registro de entrada para hoy
+    const { data: existingRecord, error: fetchError } = await supabase
+      .from("work_hours")
+      .select("*")
+      .eq("employee_id", employeeId)
+      .eq("date", today)
+      .single();
+
+    if (fetchError || !existingRecord) {
+      console.error("No se encontró un registro de entrada para hoy.");
+      return;
+    }
+
+    if (existingRecord.end_time) {
+      console.warn("Ya se ha registrado una hora de salida para hoy.");
+      return;
+    }
+
+    // Calcular la duración total
+    const startTime = new Date(`1970-01-01T${existingRecord.start_time}Z`);
+    const endTime = new Date(`1970-01-01T${now}Z`);
+    const totalMilliseconds = endTime.getTime() - startTime.getTime();
+    const totalHours = Math.floor(totalMilliseconds / (1000 * 60 * 60));
+    const totalMinutes = Math.floor((totalMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+
+    const totalDuration = `${totalHours}:${totalMinutes.toString().padStart(2, "0")}`;
+
+    // Actualizar el registro con la hora de salida y la duración total
+    const { error } = await supabase
+      .from("work_hours")
+      .update({ end_time: now, total_hours: totalDuration })
+      .eq("id", existingRecord.id);
+
+    if (error) {
+      console.error("Error registering end time:", error);
+    } else {
+      await fetchWorkHours(employeeId); // Actualizar los registros locales
+    }
+  };
 
   return (
     <WorkHoursContext.Provider
       value={{
-        intervals: intervalsInChileTime,
-        tolerance,
-        setIntervals,
-        setTolerance,
-        hasCustomWorkHours,
+        workHours,
+        registerStartTime,
+        registerEndTime,
+        fetchWorkHours,
       }}
     >
       {children}
