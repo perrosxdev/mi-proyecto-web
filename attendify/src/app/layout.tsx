@@ -3,10 +3,10 @@
 import { usePathname } from "next/navigation";
 import "./globals.css";
 import Navbar from "./components/Navbar";
-import { UserProvider } from "./context/UserContext";
 import { EmployeeProvider } from "./context/EmployeeContext";
 import { WorkHoursProvider } from "@/app/context/WorkHoursContext";
 import { VacationProvider } from "@/app/context/VacationContext";
+import { UserProvider } from "./context/UserContext";
 
 export default function RootLayout({
   children,
@@ -29,9 +29,9 @@ export default function RootLayout({
           <EmployeeProvider>
             <WorkHoursProvider>
               <VacationProvider>
-              {/* Renderiza el Navbar solo si no estás en la ruta de login */}
-              {pathname !== "/" && <Navbar />}
-              <main className="flex-grow p-4">{children}</main>
+                {/* Renderiza el Navbar solo si no estás en la ruta de login */}
+                {pathname !== "/" && <Navbar />}
+                <main className="flex-grow p-4">{children}</main>
               </VacationProvider>
             </WorkHoursProvider>
           </EmployeeProvider>

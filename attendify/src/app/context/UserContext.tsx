@@ -15,27 +15,37 @@ interface UserContextType {
   setCurrentUser: (user: User | null) => void;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+  isUserLoaded: boolean; // Nuevo estado para verificar si el usuario fue cargado
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isUserLoaded, setIsUserLoaded] = useState(false); // Nuevo estado para verificar si el usuario fue cargado
 
-  // Recuperar el usuario del localStorage al cargar la aplicación (solo en el cliente)
+  // Recuperar el usuario desde localStorage al cargar la aplicación
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("currentUser");
-      if (storedUser) {
-        setCurrentUser(JSON.parse(storedUser));
-      }
+    const storedUser = localStorage.getItem("currentUser");
+    if (storedUser) {
+      // console.log("Usuario recuperado desde localStorage:", JSON.parse(storedUser)); // Depuración
+      setCurrentUser(JSON.parse(storedUser));
+    } else {
+      console.log("No se encontró ningún usuario en localStorage."); // Depuración
     }
+    setIsUserLoaded(true); // Marcar como cargado
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     const { data: user, error } = await supabase
       .from("users")
-      .select("*")
+      .select(`
+        id,
+        username,
+        role,
+        employee_id,
+        employees (name)
+      `)
       .eq("username", username)
       .eq("password", password)
       .single();
@@ -48,7 +58,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const userData = {
       id: user.id,
       username: user.username,
-      name: user.name,
+      name: user.employees?.[0]?.name || "Sin nombre",
       role: user.role,
     };
 
@@ -68,7 +78,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UserContext.Provider value={{ currentUser, setCurrentUser, login, logout }}>
+    <UserContext.Provider value={{ currentUser, setCurrentUser, login, logout, isUserLoaded }}>
       {children}
     </UserContext.Provider>
   );

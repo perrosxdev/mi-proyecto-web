@@ -20,50 +20,52 @@ export default function Login() {
       return;
     }
   
-    // Consultar el usuario en Supabase con un JOIN para obtener el nombre del empleado
-    const { data: user, error: loginError } = await supabase
-      .from("users")
-      .select(`
-        id,
-        username,
-        role,
-        employee_id,
-        employees (name)
-      `)
-      .eq("username", username)
-      .eq("password", password)
-      .single(); // Devuelve un único usuario
+    try {
+      // Consultar el usuario en Supabase con un JOIN para obtener el nombre del empleado
+      const { data: user, error: loginError } = await supabase
+        .from("users")
+        .select(`
+          id,
+          username,
+          role,
+          employee_id,
+          employees (name)
+        `)
+        .eq("username", username)
+        .eq("password", password)
+        .single(); // Devuelve un único usuario
   
-    console.log("Usuario obtenido desde Supabase:", user); // Depuración
+      if (loginError || !user) {
+        setError("Usuario o contraseña incorrectos.");
+        return;
+      }
   
-    if (loginError || !user) {
-      setError("Usuario o contraseña incorrectos.");
-      return;
-    }
+      // Extraer el nombre del empleado si existe
+      const employeeName = user.employees?.[0]?.name || "Sin nombre";
   
-    // Establecer el usuario actual en el contexto
-    await new Promise<void>((resolve) => {
-      setCurrentUser({
+      // Establecer el usuario actual en el contexto
+      const userData = {
         id: user.id,
         username: user.username,
-        name: user.employees?.[0]?.name || "Sin nombre", // Acceder al primer elemento del arreglo
+        name: employeeName,
         role: user.role,
-      });
-      resolve();
-    });
+      };
   
-    console.log("Usuario establecido en el contexto:", {
-      id: user.id,
-      username: user.username,
-      name: user.employees?.[0]?.name || "Sin nombre",
-      role: user.role,
-    }); // Depuración
+      setCurrentUser(userData);
   
-    // Redirigir según el rol del usuario
-    if (user.role === "admin") {
-      router.push("/admin/home");
-    } else if (user.role === "employee") {
-      router.push("/registro");
+      // Guardar el usuario en localStorage
+      // console.log("Guardando usuario en localStorage:", userData); // Depuración
+      localStorage.setItem("currentUser", JSON.stringify(userData));
+  
+      // Redirigir según el rol del usuario
+      if (user.role === "admin") {
+        router.push("/admin/home");
+      } else if (user.role === "employee") {
+        router.push("/registro");
+      }
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      setError("Ocurrió un error inesperado. Por favor, intenta nuevamente.");
     }
   };
 
