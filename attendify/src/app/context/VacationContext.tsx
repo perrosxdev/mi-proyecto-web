@@ -55,10 +55,10 @@ export function VacationProvider({ children }: { children: ReactNode }) {
         console.error("Error fetching vacation requests:", error);
       } else {
         // Mapear los datos para incluir el nombre del empleado
-        const mappedRequests = (data as SupabaseVacationRequest[]).map((request) => ({
+        const mappedRequests = (data || []).map((request: any) => ({
           id: request.id,
           employeeId: request.employee_id,
-          employeeName: request.employees?.[0]?.name || "Empleado no encontrado", // Acceder al primer elemento del arreglo
+          employeeName: request.employees?.name || "Empleado no encontrado", // Acceder directamente al nombre
           startDate: request.start_date,
           endDate: request.end_date,
           status: request.status,

@@ -1,0 +1,83 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\title{Informe de Avance del Proyecto}
+\author{Carlos Ulloa Vera}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Datos Generales}
+
+\begin{itemize}
+  \item \textbf{Nombre del Proyecto:} Attendify
+  \item \textbf{Objetivo:} Crear un sistema web para registrar asistencia y gestionar vacaciones de empleados.
+\end{itemize}
+
+\section*{Avances Logrados}
+
+\subsection*{1. Implementación de Contextos}
+\begin{itemize}
+  \item Se creó e implementó el contexto \texttt{VacationContext} para manejar los datos relacionados con las solicitudes de vacaciones.
+  \item El \texttt{VacationContext} fue integrado en la pantalla de \textbf{Gestión de Vacaciones (Admin)} para manejar el estado de las solicitudes (pendiente, aprobado, rechazado).
+\end{itemize}
+
+\subsection*{2. Ajustes Visuales}
+\begin{itemize}
+  \item Se realizaron pequeños ajustes visuales en varias pantallas para mejorar la consistencia del diseño.
+  \item Se aplicaron estilos adicionales utilizando Tailwind CSS para alinear los elementos y mejorar la experiencia de usuario.
+\end{itemize}
+
+\section*{Comparación entre PMV y PMN}
+\begin{itemize}
+  \item \textbf{Elementos ya implementados en el PMN:}
+  \begin{itemize}
+    \item La funcionalidad principal de las pantallas ya estaba implementada en el PMN:
+    \begin{itemize}
+      \item \textbf{Gestión de Empleados:} Agregar, editar y eliminar empleados.
+      \item \textbf{Gestión de Asistencia:} Registro manual de asistencia con selección de fecha y hora.
+      \item \textbf{Gestión de Vacaciones:} Filtrado y actualización del estado de solicitudes de vacaciones.
+    \end{itemize}
+    \item Navegación básica entre pantallas utilizando el sistema de rutas de Next.js.
+    \item Uso de Tailwind CSS para estilos básicos.
+    \item Componentes básicos como \texttt{Navbar} y \texttt{Modal}.
+    \item Definición de contextos (\texttt{EmployeeContext}, \texttt{UserContext}).
+  \end{itemize}
+  \item \textbf{Avances realizados en el PMV:}
+  \begin{itemize}
+    \item Creación e implementación del \texttt{VacationContext} para manejar datos relacionados con las solicitudes de vacaciones.
+    \item Integración del \texttt{VacationContext} en la pantalla de \textbf{Gestión de Vacaciones (Admin)}.
+    \item Ajustes visuales menores en varias pantallas para mejorar la consistencia del diseño.
+  \end{itemize}
+\end{itemize}
+
+\section*{Próximos Pasos}
+\begin{itemize}
+  \item Completar la funcionalidad de exportación de datos en formato CSV.
+  \item Desplegar la aplicación en Vercel para acceso público.
+  \item Documentar el proyecto en un archivo \texttt{README.md}.
+\end{itemize}
+
+\section*{Enlaces Relevantes}
+\begin{itemize}
+  \item \textbf{Repositorio en GitHub:} \url{https://github.com/perrosxdev/mi-proyecto-web}
+  \item \item \textbf{Despliegue en línea:} \href{https://proyecto01-orpin.vercel.app/}{https://proyecto01-orpin.vercel.app}
+\end{itemize}
+\section{Credenciales:}
+\begin{itemize}
+    \item \textbf{Usuario: admin}
+    \item \textbf{Contraseña: admin123}
+    \item \textbf{Usuario: juancarlosbodoque}
+    \item \textbf{Contraseña: password123}
+    \item Se pueden crear usuarios usando el perfil de admin, actualmente el usuario se crea creando un empleado en gestion empleados. el usuario se hace uniendo el nombre e ingresando password123 como contraseña predeterminada.
+  
+\end{itemize}
+
+\end{document}
