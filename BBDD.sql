@@ -64,3 +64,9 @@ VALUES
 ALTER TABLE vacation_requests
 ADD CONSTRAINT fk_employee
 FOREIGN KEY (employee_id) REFERENCES employees(id);
+
+SELECT timezone('America/Santiago', date) AS local_date, time, type, employee_id
+FROM attendance;
+
+ALTER TABLE attendance
+ALTER COLUMN date TYPE TIMESTAMPTZ USING date::timestamptz;

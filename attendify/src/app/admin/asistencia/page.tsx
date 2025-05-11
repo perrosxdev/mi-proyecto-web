@@ -6,6 +6,8 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { supabase } from "@/lib/supabaseClient";
 import { Employee } from "@/app/context/EmployeeContext"; // Importar la interfaz Employee
+import { AttendanceRecord } from "@/app/context/EmployeeContext"; // Importar el tipo
+import { DateTime } from "luxon"; // Importar Luxon para manejar zonas horarias
 
 export default function AsistenciaEmpleados() {
   const [employees, setEmployees] = useState<Employee[]>([]); // Cambiar el tipo a Employee[]
@@ -29,30 +31,55 @@ export default function AsistenciaEmpleados() {
         const { data: employeesData, error: employeesError } = await supabase
           .from("employees")
           .select("id, name, position");
-
+    
         if (employeesError) {
           console.error("Error fetching employees:", employeesError);
           return;
         }
-
+    
         // Obtener registros de asistencia
         const { data: attendanceData, error: attendanceError } = await supabase
           .from("attendance")
-          .select("employee_id, date, time, type");
-
+          .select(`
+            employee_id, 
+            date, 
+            time, 
+            type
+          `) as { data: AttendanceRecord[] | null; error: any };
+    
         if (attendanceError) {
           console.error("Error fetching attendance records:", attendanceError);
           return;
         }
-
+    
+        if (!attendanceData) {
+          console.error("No attendance data found.");
+          return;
+        }
+    
+        // Verificar los datos obtenidos
+        console.log("Attendance Data:", attendanceData);
+    
+        // Convertir las fechas a la zona horaria de Chile
+        const convertedAttendanceData = attendanceData.map((record) => ({
+          ...record,
+          date: record.date
+            ? DateTime.fromISO(record.date, { zone: "UTC" })
+                .setZone("America/Santiago")
+                .toISODate()
+            : "1970-01-01", // Asignar un valor predeterminado si date es null
+        })) as AttendanceRecord[]; // Asegurar que cumple con el tipo
+    
+        console.log("Converted Attendance Data:", convertedAttendanceData);
+    
         // Mapear los registros de asistencia a los empleados
         const employeesWithAttendance = employeesData.map((employee) => ({
           ...employee,
-          attendance: attendanceData.filter(
+          attendance: convertedAttendanceData.filter(
             (record) => record.employee_id === employee.id
           ),
         }));
-
+    
         setEmployees(employeesWithAttendance);
       } catch (error) {
         console.error("Unexpected error fetching employees and attendance:", error);
@@ -72,20 +99,20 @@ export default function AsistenciaEmpleados() {
             if (selectedEmployeeId !== null && employee.id !== selectedEmployeeId) {
               return false;
             }
-
+    
             // Filtro por rango de fechas
             const recordDate = normalizeDate(new Date(record.date)).getTime();
             const start = startDate ? normalizeDate(startDate).getTime() : null;
             const end = endDate ? normalizeDate(endDate).getTime() : null;
-
+    
             if (start !== null && recordDate < start) return false;
             if (end !== null && recordDate > end) return false; // Incluir el día final
-
+    
             // Filtro por tipo de registro
             if (recordType && record.type !== recordType) {
               return false;
             }
-
+    
             return true;
           })
           .map((record) => ({
@@ -93,7 +120,7 @@ export default function AsistenciaEmpleados() {
             employeeName: employee.name,
           }))
       );
-
+    
       setFilteredAttendanceHistory(filtered);
     };
 
@@ -206,7 +233,13 @@ export default function AsistenciaEmpleados() {
               <tbody>
                 {filteredAttendanceHistory.map((record, index) => (
                   <tr key={index} className="hover:bg-gray-100">
-                    <td className="border border-gray-300 px-4 py-2">{record.date}</td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {new Date(record.date).toLocaleDateString("es-CL", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </td>
                     <td className="border border-gray-300 px-4 py-2">{record.time}</td>
                     <td className="border border-gray-300 px-4 py-2">{record.type}</td>
                     <td className="border border-gray-300 px-4 py-2">{record.employeeName}</td>

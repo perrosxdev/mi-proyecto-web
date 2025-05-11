@@ -15,11 +15,17 @@ export default function GestionAsistencia() {
     date: "",
     time: "",
     type: "entrada",
-  });const [isDateModalOpen, setIsDateModalOpen] = useState(false); // Estado para el modal de fecha
+  });
+  const [isDateModalOpen, setIsDateModalOpen] = useState(false); // Estado para el modal de fecha
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false); // Estado para el modal de hora
   const [selectedHour, setSelectedHour] = useState("12"); // Hora seleccionada
   const [selectedMinute, setSelectedMinute] = useState("00"); // Minuto seleccionado
   const [error, setError] = useState("");
+
+  // **Nuevo estado para el modal de notificaciones**
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState(""); // Título dinámico del modal
+  const [notificationMessage, setNotificationMessage] = useState(""); // Mensaje del modal
 
   // Cargar empleados desde Supabase (excluyendo al administrador)
   useEffect(() => {
@@ -30,15 +36,15 @@ export default function GestionAsistencia() {
           .from("users")
           .select("employee_id")
           .eq("role", "admin");
-  
+
         if (adminError) {
           console.error("Error fetching admin users:", adminError);
           return;
         }
-  
+
         // Extraer los IDs de los administradores
         const adminEmployeeIds = adminUsers.map((user) => user.employee_id);
-  
+
         // Paso 2: Obtener los empleados excluyendo a los administradores
         const { data: employeesData, error: employeesError } = await supabase
           .from("employees")
@@ -49,24 +55,24 @@ export default function GestionAsistencia() {
             attendance: attendance (employee_id, date, time, type) -- Incluir la relación attendance
           `)
           .not("id", "in", `(${adminEmployeeIds.join(",")})`); // Excluir los IDs de los administradores
-  
+
         if (employeesError) {
           console.error("Error fetching employees:", employeesError);
           return;
         }
-  
+
         // Mapear los empleados para incluir un valor predeterminado para attendance
         const mappedEmployees = (employeesData || []).map((employee: any) => ({
           ...employee,
           attendance: employee.attendance || [], // Valor predeterminado
         }));
-  
+
         setEmployees(mappedEmployees);
       } catch (error) {
         console.error("Unexpected error fetching employees:", error);
       }
     };
-  
+
     fetchEmployees();
   }, []);
 
@@ -76,24 +82,39 @@ export default function GestionAsistencia() {
       setError("Por favor, completa todos los campos.");
       return;
     }
-
+  
+    const selectedEmployee = employees.find((e) => e.id === selectedEmployeeId);
+  
     const { error } = await supabase.from("attendance").insert({
       employee_id: selectedEmployeeId,
       date: newRecord.date,
       time: newRecord.time,
       type: newRecord.type,
     });
-
+  
     if (error) {
       console.error("Error adding attendance record:", error);
-      setError("Ocurrió un error al agregar el registro.");
+      setNotificationTitle("Error");
+      setNotificationMessage("Ocurrió un error al agregar el registro.");
+      setIsNotificationModalOpen(true); // Abrir el modal de notificación
     } else {
-      alert("Registro de asistencia agregado correctamente.");
+      setNotificationTitle(
+        newRecord.type === "entrada" ? "Entrada agregada" : "Salida agregada"
+      );
+      setNotificationMessage(
+        `Se agregó una ${newRecord.type} para ${selectedEmployee?.name || "el empleado"} el ${newRecord.date} a las ${newRecord.time}.`
+      );
+      setIsNotificationModalOpen(true); // Abrir el modal de notificación
+  
+      // Restablecer el formulario excepto el empleado seleccionado
       setNewRecord({
-        ...newRecord,
-        date: new Date().toISOString().split("T")[0], // Usa la fecha actual como ejemplo
+        employee_id: selectedEmployeeId, // Mantener el empleado seleccionado
+        date: "", // Restablecer la fecha
+        time: "", // Restablecer la hora
+        type: "entrada", // Restablecer el tipo a "entrada"
       });
-      setError("");
+  
+      setError(""); // Limpiar errores
     }
   };
 
@@ -263,6 +284,15 @@ export default function GestionAsistencia() {
               Guardar Hora
             </button>
           </div>
+        </Modal>
+
+        {/* Modal de notificaciones */}
+        <Modal
+          isOpen={isNotificationModalOpen}
+          onClose={() => setIsNotificationModalOpen(false)}
+          title={notificationTitle} // Título dinámico
+        >
+          <p>{notificationMessage}</p>
         </Modal>
       </main>
     </div>
